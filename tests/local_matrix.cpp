@@ -7,7 +7,6 @@
 
 #include <hpx/util/lightweight_test.hpp>
 
-#include <hpxla/local_blas.hpp>
 #include <hpxla/local_matrix.hpp>
 
 template <

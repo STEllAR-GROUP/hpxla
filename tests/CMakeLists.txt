@@ -6,6 +6,7 @@
 set(non_hpx_tests
     std_complex_cblas_compatibility
     local_matrix
+    local_blas_level_1
    )
 
 foreach(test ${non_hpx_tests})
