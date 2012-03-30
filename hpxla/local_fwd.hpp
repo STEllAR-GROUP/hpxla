@@ -67,7 +67,7 @@ struct row_major_index
       , std::size_t col
       , matrix_dimensions bounds
       , matrix_dimensions offsets = matrix_dimensions(0, 0)
-        ) const
+        )
     {
         BOOST_ASSERT(row < bounds.rows);
         BOOST_ASSERT(col < bounds.cols);
