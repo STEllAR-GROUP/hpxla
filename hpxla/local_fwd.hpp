@@ -8,6 +8,8 @@
 #if !defined(HPXLA_F1C9159C_DE88_4AAB_A4F2_5F186B3C6B84)
 #define HPXLA_F1C9159C_DE88_4AAB_A4F2_5F186B3C6B84
 
+#include <hpxla/local_blas/blas_order.hpp>
+
 #include <boost/fusion/include/define_struct.hpp>
 
 BOOST_FUSION_DEFINE_STRUCT(
@@ -39,6 +41,23 @@ struct column_major_index
     {
         return bounds.rows;
     }
+
+    static blas::index_order order()
+    {
+        return HPXLA_COLUMN_MAJOR_ORDER;
+    }
+
+    template <
+        typename T
+    >
+    static T* compute_pointer(
+        T* base
+      , matrix_dimensions bounds
+      , matrix_dimensions offsets
+        )
+    { 
+        return base + index(0, 0, bounds, offsets);
+    }
 };
 
 struct row_major_index
@@ -61,6 +80,23 @@ struct row_major_index
         )
     {
         return bounds.cols;
+    }
+
+    static blas::index_order order()
+    {
+        return HPXLA_ROW_MAJOR_ORDER;
+    }
+
+    template <
+        typename T
+    >
+    static T* compute_pointer(
+        T* base
+      , matrix_dimensions bounds
+      , matrix_dimensions offsets
+        )
+    { 
+        return base + index(0, 0, bounds, offsets);
     }
 };
 

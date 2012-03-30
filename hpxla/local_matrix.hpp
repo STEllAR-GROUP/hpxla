@@ -179,6 +179,11 @@ struct local_matrix
         return view_.leading_dimension();
     }
 
+    blas::index_order index_order() const
+    {
+        return view_.index_order(); 
+    }
+
     view_type& view()
     {
         return view_; 

@@ -252,17 +252,22 @@ struct local_matrix_view
 
     pointer data()
     {
-        return storage_->data() + index_type::index(0, 0, bounds_, offsets_);
+        return index_type::compute_pointer(storage_->data(), bounds_, offsets_);
     }
 
     const_pointer data() const
     {
-        return storage_->data() + index_type::index(0, 0, bounds_, offsets_);
+        return index_type::compute_pointer(storage_->data(), bounds_, offsets_);
     }
 
     size_type leading_dimension() const
     {
         return index_type::leading_dimension(bounds_);
+    }
+
+    blas::index_order index_order() const
+    {
+        return index_type::order();
     }
 };
 
