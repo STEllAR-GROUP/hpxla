@@ -11,6 +11,7 @@
 #include <hpxla/local_fwd.hpp>
 
 #include <vector>
+#include <initializer_list>
 
 #include <boost/shared_ptr.hpp>
 #include <boost/assert.hpp>
@@ -61,47 +62,33 @@ struct local_matrix_view
 
     /// Constructs a new matrix initialized from the matrix \a m.
     local_matrix_view(
-        std::vector<std::vector<value_type> > const& m
+        std::initializer_list<std::vector<value_type> > m
         )
       : bounds_{0, 0}
       , extents_{0, 0}
       , offsets_{0, 0}
     {
-        if (!m.empty() && !m[0].empty())
+        if (0 != m.size() && !(*m.begin()).empty())
         {
             bounds_.rows = extents_.rows = m.size();
-            bounds_.cols = extents_.cols = m[0].size();
+            bounds_.cols = extents_.cols = (*m.begin()).size();
 
-            size_type const space = bounds_.rows * bounds_.cols;
-            storage_.reset(new std::vector<value_type>(space));
+            storage_.reset(
+                new std::vector<value_type>(bounds_.rows * bounds_.cols));
 
-            for (size_type i = 0; i < bounds_.rows; ++i)
+            typedef typename std::initializer_list<
+                std::vector<value_type>
+            >::const_iterator const_iterator; 
+
+            const_iterator it = m.begin();
+
+            for (size_type i = 0; i < bounds_.rows; ++i, ++it)
             {
-                BOOST_ASSERT(bounds_.cols == m[i].size());
+                BOOST_ASSERT(bounds_.cols == (*it).size());
 
                 for (size_type j = 0; j < bounds_.cols; ++j)
-                    (*this)(i, j) = m[i][j]; 
+                    (*this)(i, j) = (*it)[j]; 
             }
-        }
-    }
-
-    /// Constructs a new vector (n x 1 matrix) initialized from the vector \a v.
-    local_matrix_view(
-        std::vector<value_type> const& v
-        )
-      : bounds_{0, 0}
-      , extents_{0, 0}
-      , offsets_{0, 0}
-    {
-        if (!v.empty())
-        {
-            bounds_.rows = extents_.rows = v.size();
-            bounds_.cols = extents_.cols = 1; 
-
-            storage_.reset(new std::vector<value_type>(bounds_.rows));
-
-            for (size_type i = 0; i < bounds_.rows; ++i)
-                (*this)(i) = v[i];
         }
     }
 
@@ -155,66 +142,6 @@ struct local_matrix_view
         other.bounds_ = matrix_dimensions({0, 0});
         other.extents_ = matrix_dimensions({0, 0});
         other.offsets_ = matrix_dimensions({0, 0});
-    }
-
-    local_matrix_view& operator=(
-        std::vector<std::vector<value_type> > const& m
-        )
-    {
-        if (!m.empty() && !m[0].empty())
-        {
-            offsets_.rows = offsets_.cols = 0;
-            bounds_.rows = extents_.rows = m.size();
-            bounds_.cols = extents_.cols = m[0].size();
-
-            storage_.reset(
-                new std::vector<value_type>(bounds_.rows * bounds_.cols));
-
-            for (size_type i = 0; i < bounds_.rows; ++i)
-            {
-                BOOST_ASSERT(bounds_.cols == m[i].size());
-
-                for (size_type j = 0; j < bounds_.cols; ++j)
-                    (*this)(i, j) = m[i][j]; 
-            }
-        }
-
-        else
-        {
-            storage_.reset();
-            bounds_.rows = bounds_.cols = 0;
-            extents_.rows = extents_.cols = 0;
-            offsets_.rows = offsets_.cols = 0;
-        }
-
-        return *this;
-    }
-
-    local_matrix_view& operator=(
-        std::vector<value_type> const& v
-        )
-    {
-        if (!v.empty())
-        {
-            offsets_.rows = offsets_.cols = 0;
-            bounds_.rows = extents_.rows = v.size();
-            bounds_.cols = extents_.cols = 1; 
-
-            storage_.reset(new std::vector<value_type>(bounds_.rows));
-
-            for (size_type i = 0; i < bounds_.rows; ++i)
-                (*this)(i) = v[i];
-        }
-
-        else
-        {
-            storage_.reset();
-            bounds_.rows = bounds_.cols = 0;
-            extents_.rows = extents_.cols = 0;
-            offsets_.rows = offsets_.cols = 0;
-        }
-
-        return *this;
     }
 
     local_matrix_view& operator=(

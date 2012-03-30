@@ -40,15 +40,9 @@ struct local_matrix
     local_matrix() {}
 
     local_matrix(
-        std::vector<std::vector<value_type> > const& m
+        std::initializer_list<std::vector<value_type> > m
         )
       : view_{m} 
-    {}
-
-    local_matrix(
-        std::vector<value_type> const& v
-        )
-      : view_{v} 
     {}
 
     local_matrix(
@@ -82,24 +76,6 @@ struct local_matrix
         )
       : view_{other.view_} 
     {}
-
-    local_matrix& operator=(
-        std::vector<std::vector<value_type> > const& m
-        )
-    {
-        view_ = m;
-
-        return *this;
-    }
-
-    local_matrix& operator=(
-        std::vector<value_type> const& v
-        )
-    {
-        view_ = v;
-
-        return *this;
-    }
 
     local_matrix& operator=(
         local_matrix const& other
