@@ -40,6 +40,8 @@ struct local_matrix_view
     typedef T const* const_pointer;
     typedef std::size_t size_type;
 
+    typedef Index index_type;
+
   private:
     boost::shared_ptr<std::vector<value_type> > storage_; 
 
@@ -47,7 +49,7 @@ struct local_matrix_view
     matrix_dimensions extents_; // Dimensions of this view.
     matrix_dimensions offsets_; // Offsets of this view.
 
-    Index indexer_;             // Indexing object.
+    index_type indexer_;        // Indexing object.
 
   public:
     /// Constructs a new, empty matrix.
@@ -148,7 +150,12 @@ struct local_matrix_view
       , bounds_{other.bounds_}
       , extents_{other.extents_}
       , offsets_{other.offsets_}
-    {}
+    {
+        other.storage_.reset();
+        other.bounds_ = matrix_dimensions({0, 0});
+        other.extents_ = matrix_dimensions({0, 0});
+        other.offsets_ = matrix_dimensions({0, 0});
+    }
 
     local_matrix_view& operator=(
         std::vector<std::vector<value_type> > const& m
@@ -231,6 +238,11 @@ struct local_matrix_view
         extents_ = other.extents_;
         offsets_ = other.offsets_;
         storage_ = other.storage_;
+
+        other.storage_.reset();
+        other.bounds_ = matrix_dimensions({0, 0});
+        other.extents_ = matrix_dimensions({0, 0});
+        other.offsets_ = matrix_dimensions({0, 0});
 
         return *this;
     }

@@ -31,6 +31,8 @@ struct local_matrix
     typedef typename view_type::const_pointer const_pointer;
     typedef typename view_type::size_type size_type;
 
+    typedef typename view_type::index_type index_type;
+
   private:
     view_type view_;
 
