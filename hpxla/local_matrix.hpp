@@ -34,7 +34,7 @@ struct local_matrix
     typedef typename view_type::index_type index_type;
 
   private:
-    BOOST_COPYABLE_AND_MOVEABLE(local_matrix);
+    BOOST_COPYABLE_AND_MOVABLE(local_matrix);
 
     view_type view_;
 

@@ -45,7 +45,7 @@ struct local_matrix_view
     typedef Index index_type;
 
   private:
-    BOOST_COPYABLE_AND_MOVEABLE(local_matrix);
+    BOOST_COPYABLE_AND_MOVABLE(local_matrix_view);
 
     boost::shared_ptr<std::vector<value_type> > storage_; 
 
