@@ -20,7 +20,7 @@ namespace hpxla
 
 // TODO: Allocator support.
 // TODO: Container compatible.
-// TODO: LDA stuff.
+// TODO: LDA/stride stuff.
 template <
     typename T
   , typename Index 

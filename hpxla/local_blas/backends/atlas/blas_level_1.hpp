@@ -8,7 +8,7 @@
 #if !defined(HPXLA_AA7B5EF8_9E19_4F28_B48C_EB9DC2512EA0)
 #define HPXLA_AA7B5EF8_9E19_4F28_B48C_EB9DC2512EA0
 
-#include <hpxla/local_matrix.hpp>
+#include <hpxla/local_matrix_view.hpp>
 
 #include <boost/array.hpp>
 
@@ -17,8 +17,6 @@
 #include <cblas.h>
 
 // TODO: std::vector overloads.
-// TODO: Replace local_matrix with local_matrix_view, add local_matrix
-//       forwarders.
 
 namespace hpxla { namespace blas
 {
@@ -28,7 +26,7 @@ namespace hpxla { namespace blas
 
 /// BLAS1: Computes the sum of magnitudes of the vector elements.
 inline float asum(
-    local_matrix<float> const& X
+    local_matrix_view<float> const& X
   , std::size_t strideX = 1
     )
 {
@@ -38,7 +36,7 @@ inline float asum(
 
 /// BLAS1: Computes the sum of magnitudes of the vector elements.
 inline float asum(
-    local_matrix<std::complex<float> > const& X
+    local_matrix_view<std::complex<float> > const& X
   , std::size_t strideX = 1
     )
 {
@@ -48,7 +46,7 @@ inline float asum(
 
 /// BLAS1: Computes the sum of magnitudes of the vector elements.
 inline double asum(
-    local_matrix<double> const& X
+    local_matrix_view<double> const& X
   , std::size_t strideX = 1
     )
 {
@@ -58,7 +56,7 @@ inline double asum(
 
 /// BLAS1: Computes the sum of magnitudes of the vector elements.
 inline double asum(
-    local_matrix<std::complex<double> > const& X
+    local_matrix_view<std::complex<double> > const& X
   , std::size_t strideX = 1
     )
 {
@@ -74,8 +72,8 @@ inline double asum(
 /// BLAS1: Computes a vector-scalar product and adds the result to a vector.
 inline void axpy(
     float a
-  , local_matrix<float> const& X
-  , local_matrix<float>& Y
+  , local_matrix_view<float> const& X
+  , local_matrix_view<float>& Y
   , std::size_t strideX = 1
   , std::size_t strideY = 1
     )
@@ -89,8 +87,8 @@ inline void axpy(
 /// BLAS1: Computes a vector-scalar product and adds the result to a vector.
 inline void axpy(
     std::complex<float> a
-  , local_matrix<std::complex<float> > const& X
-  , local_matrix<std::complex<float> >& Y
+  , local_matrix_view<std::complex<float> > const& X
+  , local_matrix_view<std::complex<float> >& Y
   , std::size_t strideX = 1
   , std::size_t strideY = 1
     )
@@ -106,8 +104,8 @@ inline void axpy(
 /// BLAS1: Computes a vector-scalar product and adds the result to a vector.
 inline void axpy(
     double a
-  , local_matrix<double> const& X
-  , local_matrix<double>& Y
+  , local_matrix_view<double> const& X
+  , local_matrix_view<double>& Y
   , std::size_t strideX = 1
   , std::size_t strideY = 1
     )
@@ -121,8 +119,8 @@ inline void axpy(
 /// BLAS1: Computes a vector-scalar product and adds the result to a vector.
 inline void axpy(
     std::complex<double> a
-  , local_matrix<std::complex<double> > const& X
-  , local_matrix<std::complex<double> >& Y
+  , local_matrix_view<std::complex<double> > const& X
+  , local_matrix_view<std::complex<double> >& Y
   , std::size_t strideX = 1
   , std::size_t strideY = 1
     )
@@ -142,8 +140,8 @@ inline void axpy(
 
 /// BLAS1: Copies vector to another vector. 
 inline void copy(
-    local_matrix<float> const& X
-  , local_matrix<float>& Y
+    local_matrix_view<float> const& X
+  , local_matrix_view<float>& Y
   , std::size_t strideX = 1
   , std::size_t strideY = 1
     )
@@ -156,8 +154,8 @@ inline void copy(
 
 /// BLAS1: Copies vector to another vector. 
 inline void copy(
-    local_matrix<std::complex<float> > const& X
-  , local_matrix<std::complex<float> >& Y
+    local_matrix_view<std::complex<float> > const& X
+  , local_matrix_view<std::complex<float> >& Y
   , std::size_t strideX = 1
   , std::size_t strideY = 1
     )
@@ -171,8 +169,8 @@ inline void copy(
 
 /// BLAS1: Copies vector to another vector. 
 inline void copy(
-    local_matrix<double> const& X
-  , local_matrix<double>& Y
+    local_matrix_view<double> const& X
+  , local_matrix_view<double>& Y
   , std::size_t strideX = 1
   , std::size_t strideY = 1
     )
@@ -185,8 +183,8 @@ inline void copy(
 
 /// BLAS1: Copies vector to another vector. 
 inline void copy(
-    local_matrix<std::complex<double> > const& X
-  , local_matrix<std::complex<double> >& Y
+    local_matrix_view<std::complex<double> > const& X
+  , local_matrix_view<std::complex<double> >& Y
   , std::size_t strideX = 1
   , std::size_t strideY = 1
     )
@@ -205,8 +203,8 @@ inline void copy(
 
 /// BLAS1: Computes a vector-vector dot product.
 inline float dot(
-    local_matrix<float> const& X
-  , local_matrix<float> const& Y
+    local_matrix_view<float> const& X
+  , local_matrix_view<float> const& Y
   , std::size_t strideX = 1
   , std::size_t strideY = 1
     )
@@ -219,8 +217,8 @@ inline float dot(
 
 /// BLAS1: Computes a vector-vector dot product.
 inline double dot(
-    local_matrix<double> const& X
-  , local_matrix<double> const& Y
+    local_matrix_view<double> const& X
+  , local_matrix_view<double> const& Y
   , std::size_t strideX = 1
   , std::size_t strideY = 1
     )
@@ -238,8 +236,8 @@ inline double dot(
 
 /// BLAS1: Computes a vector-vector dot product with extended precision.
 inline float sdot(
-    local_matrix<float> const& X
-  , local_matrix<float> const& Y
+    local_matrix_view<float> const& X
+  , local_matrix_view<float> const& Y
   , float sb = 0.0
   , std::size_t strideX = 1
   , std::size_t strideY = 1
@@ -253,8 +251,8 @@ inline float sdot(
 
 /// BLAS1: Computes a vector-vector dot product with extended precision.
 inline double sdot(
-    local_matrix<float> const& X
-  , local_matrix<float> const& Y
+    local_matrix_view<float> const& X
+  , local_matrix_view<float> const& Y
   , std::size_t strideX = 1
   , std::size_t strideY = 1
     )
@@ -272,8 +270,8 @@ inline double sdot(
 
 /// BLAS1: Computes a dot product of a conjugated vector with another vector.
 inline std::complex<float> dotc(
-    local_matrix<std::complex<float> > const& X
-  , local_matrix<std::complex<float> > const& Y
+    local_matrix_view<std::complex<float> > const& X
+  , local_matrix_view<std::complex<float> > const& Y
   , std::size_t strideX = 1
   , std::size_t strideY = 1
     )
@@ -290,8 +288,8 @@ inline std::complex<float> dotc(
 
 /// BLAS1: Computes a dot product of a conjugated vector with another vector.
 inline std::complex<double> dotc(
-    local_matrix<std::complex<double> > const& X
-  , local_matrix<std::complex<double> > const& Y
+    local_matrix_view<std::complex<double> > const& X
+  , local_matrix_view<std::complex<double> > const& Y
   , std::size_t strideX = 1
   , std::size_t strideY = 1
     )
@@ -313,8 +311,8 @@ inline std::complex<double> dotc(
 
 /// BLAS1: Computes a dot product of a conjugated vector with another vector.
 inline std::complex<float> dotu(
-    local_matrix<std::complex<float> > const& X
-  , local_matrix<std::complex<float> > const& Y
+    local_matrix_view<std::complex<float> > const& X
+  , local_matrix_view<std::complex<float> > const& Y
   , std::size_t strideX = 1
   , std::size_t strideY = 1
     )
@@ -331,8 +329,8 @@ inline std::complex<float> dotu(
 
 /// BLAS1: Computes a dot product of a conjugated vector with another vector.
 inline std::complex<double> dotu(
-    local_matrix<std::complex<double> > const& X
-  , local_matrix<std::complex<double> > const& Y
+    local_matrix_view<std::complex<double> > const& X
+  , local_matrix_view<std::complex<double> > const& Y
   , std::size_t strideX = 1
   , std::size_t strideY = 1
     )
@@ -354,7 +352,7 @@ inline std::complex<double> dotu(
 
 /// BLAS1: Computes the Euclidean norm of a vector. 
 inline float nrm2(
-    local_matrix<float> const& X
+    local_matrix_view<float> const& X
   , std::size_t strideX = 1
     )
 {
@@ -364,7 +362,7 @@ inline float nrm2(
 
 /// BLAS1: Computes the Euclidean norm of a vector. 
 inline float nrm2(
-    local_matrix<std::complex<float> > const& X
+    local_matrix_view<std::complex<float> > const& X
   , std::size_t strideX = 1
     )
 {
@@ -374,7 +372,7 @@ inline float nrm2(
 
 /// BLAS1: Computes the Euclidean norm of a vector. 
 inline double nrm2(
-    local_matrix<double> const& X
+    local_matrix_view<double> const& X
   , std::size_t strideX = 1
     )
 {
@@ -384,7 +382,7 @@ inline double nrm2(
 
 /// BLAS1: Computes the Euclidean norm of a vector. 
 inline double nrm2(
-    local_matrix<std::complex<double> > const& X
+    local_matrix_view<std::complex<double> > const& X
   , std::size_t strideX = 1
     )
 {
@@ -399,8 +397,8 @@ inline double nrm2(
 
 /// BLAS1: Performs rotation of points in the plane.
 inline void rot(
-    local_matrix<float>& X
-  , local_matrix<float>& Y
+    local_matrix_view<float>& X
+  , local_matrix_view<float>& Y
   , float c
   , float s
   , std::size_t strideX = 1
@@ -415,8 +413,8 @@ inline void rot(
 
 /// BLAS1: Performs rotation of points in the plane.
 inline void rot(
-    local_matrix<double>& X
-  , local_matrix<double>& Y
+    local_matrix_view<double>& X
+  , local_matrix_view<double>& Y
   , double c
   , double s
   , std::size_t strideX = 1
@@ -463,9 +461,9 @@ inline void rotg(
 
 /// BLAS1: Performs modified Givens rotation of points in the plane.
 inline void rotm(
-    local_matrix<float>& X
-  , local_matrix<float>& Y
-  , local_matrix<float> const& param
+    local_matrix_view<float>& X
+  , local_matrix_view<float>& Y
+  , local_matrix_view<float> const& param
   , std::size_t strideX = 1
   , std::size_t strideY = 1
     )
@@ -480,8 +478,8 @@ inline void rotm(
 
 /// BLAS1: Performs modified Givens rotation of points in the plane.
 inline void rotm(
-    local_matrix<float>& X
-  , local_matrix<float>& Y
+    local_matrix_view<float>& X
+  , local_matrix_view<float>& Y
   , boost::array<float, 5> const& param
   , std::size_t strideX = 1
   , std::size_t strideY = 1
@@ -495,9 +493,9 @@ inline void rotm(
 
 /// BLAS1: Performs modified Givens rotation of points in the plane.
 inline void rotm(
-    local_matrix<double>& X
-  , local_matrix<double>& Y
-  , local_matrix<double> const& param
+    local_matrix_view<double>& X
+  , local_matrix_view<double>& Y
+  , local_matrix_view<double> const& param
   , std::size_t strideX = 1
   , std::size_t strideY = 1
     )
@@ -512,8 +510,8 @@ inline void rotm(
 
 /// BLAS1: Performs modified Givens rotation of points in the plane.
 inline void rotm(
-    local_matrix<double>& X
-  , local_matrix<double>& Y
+    local_matrix_view<double>& X
+  , local_matrix_view<double>& Y
   , boost::array<double, 5> const& param
   , std::size_t strideX = 1
   , std::size_t strideY = 1
@@ -536,7 +534,7 @@ inline void rotmg(
   , float& d2
   , float& x1
   , float y1
-  , local_matrix<float>& param
+  , local_matrix_view<float>& param
     )
 {
     BOOST_ASSERT(1 == param.columns()); 
@@ -562,7 +560,7 @@ inline void rotmg(
   , double& d2
   , double& x1
   , double y1
-  , local_matrix<double>& param
+  , local_matrix_view<double>& param
     )
 {
     BOOST_ASSERT(1 == param.columns()); 
@@ -590,7 +588,7 @@ inline void rotmg(
 /// BLAS1: Computes the product of a vector by a scalar. 
 inline void scal(
     float a 
-  , local_matrix<float>& X
+  , local_matrix_view<float>& X
   , std::size_t strideX = 1
     )
 {
@@ -601,7 +599,7 @@ inline void scal(
 /// BLAS1: Computes the product of a vector by a scalar. 
 inline void scal(
     std::complex<float> a
-  , local_matrix<std::complex<float> >& X
+  , local_matrix_view<std::complex<float> >& X
   , std::size_t strideX = 1
     )
 {
@@ -612,7 +610,7 @@ inline void scal(
 /// BLAS1: Computes the product of a vector by a scalar. 
 inline void scal(
     float a
-  , local_matrix<std::complex<float> >& X
+  , local_matrix_view<std::complex<float> >& X
   , std::size_t strideX = 1
     )
 {
@@ -623,7 +621,7 @@ inline void scal(
 /// BLAS1: Computes the product of a vector by a scalar. 
 inline void scal(
     double a
-  , local_matrix<double>& X
+  , local_matrix_view<double>& X
   , std::size_t strideX = 1
     )
 {
@@ -634,7 +632,7 @@ inline void scal(
 /// BLAS1: Computes the product of a vector by a scalar. 
 inline void scal(
     std::complex<double> a
-  , local_matrix<std::complex<double> >& X
+  , local_matrix_view<std::complex<double> >& X
   , std::size_t strideX = 1
     )
 {
@@ -645,7 +643,7 @@ inline void scal(
 /// BLAS1: Computes the product of a vector by a scalar. 
 inline void scal(
     double a
-  , local_matrix<std::complex<double> >& X
+  , local_matrix_view<std::complex<double> >& X
   , std::size_t strideX = 1
     )
 {
@@ -660,8 +658,8 @@ inline void scal(
 
 /// BLAS1: Swaps a vector with another vector. 
 inline void swap(
-    local_matrix<float>& X
-  , local_matrix<float>& Y
+    local_matrix_view<float>& X
+  , local_matrix_view<float>& Y
   , std::size_t strideX = 1
   , std::size_t strideY = 1
     )
@@ -674,8 +672,8 @@ inline void swap(
 
 /// BLAS1: Swaps a vector with another vector. 
 inline void swap(
-    local_matrix<std::complex<float> >& X
-  , local_matrix<std::complex<float> >& Y
+    local_matrix_view<std::complex<float> >& X
+  , local_matrix_view<std::complex<float> >& Y
   , std::size_t strideX = 1
   , std::size_t strideY = 1
     )
@@ -689,8 +687,8 @@ inline void swap(
 
 /// BLAS1: Swaps a vector with another vector. 
 inline void swap(
-    local_matrix<double>& X
-  , local_matrix<double>& Y
+    local_matrix_view<double>& X
+  , local_matrix_view<double>& Y
   , std::size_t strideX = 1
   , std::size_t strideY = 1
     )
@@ -703,8 +701,8 @@ inline void swap(
 
 /// BLAS1: Swaps a vector with another vector. 
 inline void swap(
-    local_matrix<std::complex<double> >& X
-  , local_matrix<std::complex<double> >& Y
+    local_matrix_view<std::complex<double> >& X
+  , local_matrix_view<std::complex<double> >& Y
   , std::size_t strideX = 1
   , std::size_t strideY = 1
     )
@@ -723,7 +721,7 @@ inline void swap(
 
 /// BLAS1: Finds the index of the element with maximum absolute value. 
 inline std::size_t iamax(
-    local_matrix<float> const& X
+    local_matrix_view<float> const& X
   , std::size_t strideX = 1
     )
 {
@@ -733,7 +731,7 @@ inline std::size_t iamax(
 
 /// BLAS1: Finds the index of the element with maximum absolute value. 
 inline std::size_t iamax(
-    local_matrix<std::complex<float> > const& X
+    local_matrix_view<std::complex<float> > const& X
   , std::size_t strideX = 1
     )
 {
@@ -743,7 +741,7 @@ inline std::size_t iamax(
 
 /// BLAS1: Finds the index of the element with maximum absolute value. 
 inline std::size_t iamax(
-    local_matrix<double> const& X
+    local_matrix_view<double> const& X
   , std::size_t strideX = 1
     )
 {
@@ -753,7 +751,7 @@ inline std::size_t iamax(
 
 /// BLAS1: Finds the index of the element with maximum absolute value. 
 inline std::size_t iamax(
-    local_matrix<std::complex<double> > const& X
+    local_matrix_view<std::complex<double> > const& X
   , std::size_t strideX = 1
     )
 {
