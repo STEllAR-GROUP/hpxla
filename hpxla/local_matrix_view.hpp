@@ -13,8 +13,11 @@
 #include <vector>
 #include <initializer_list>
 
-#include <boost/shared_ptr.hpp>
 #include <boost/assert.hpp>
+#include <boost/move/move.hpp>
+#include <boost/shared_ptr.hpp>
+
+#include <iostream>
 
 namespace hpxla
 {
@@ -55,21 +58,21 @@ struct local_matrix_view
   public:
     /// Constructs a new, empty matrix.
     local_matrix_view()
-      : bounds_{0, 0}
-      , extents_{0, 0}
-      , offsets_{0, 0}
+      : bounds_(0, 0)
+      , extents_(0, 0)
+      , offsets_(0, 0)
     {}
 
     /// Constructs a new matrix initialized from the matrix \a m.
     local_matrix_view(
         std::initializer_list<std::vector<value_type> > m
         )
-      : bounds_{0, 0}
-      , extents_{0, 0}
-      , offsets_{0, 0}
+      : bounds_(0, 0)
+      , extents_(0, 0)
+      , offsets_(0, 0)
     {
         if (0 != m.size() && !(*m.begin()).empty())
-        {
+       {
             bounds_.rows = extents_.rows = m.size();
             bounds_.cols = extents_.cols = (*m.begin()).size();
 
@@ -99,9 +102,9 @@ struct local_matrix_view
       , size_type cols = 1
       , value_type init = value_type()
         )
-      : bounds_{rows, cols}
-      , extents_{rows, cols}
-      , offsets_{rows, cols}
+      : bounds_(rows, cols)
+      , extents_(rows, cols)
+      , offsets_(0, 0)
     {
         if (rows && cols)
             storage_.reset(new std::vector<value_type>(rows * cols, init));
@@ -111,37 +114,37 @@ struct local_matrix_view
     local_matrix_view(
         local_matrix_view const& other
         )
-      : storage_{other.storage_}
-      , bounds_{other.bounds_}
-      , extents_{other.extents_}
-      , offsets_{other.offsets_}
+      : storage_(other.storage_)
+      , bounds_(other.bounds_)
+      , extents_(other.extents_)
+      , offsets_(other.offsets_)
     {}
 
     /// Construct a new view of the matrix pointed to by \a other.
     local_matrix_view(
         local_matrix_view const& other
       , matrix_dimensions extents
-      , matrix_dimensions offsets = matrix_dimensions({0, 0}) 
+      , matrix_dimensions offsets = matrix_dimensions(0, 0) 
         )
-      : storage_{other.storage_}
-      , bounds_{other.bounds_}
-      , extents_{extents}
-      , offsets_{offsets}
+      : storage_(other.storage_)
+      , bounds_(other.bounds_)
+      , extents_(extents)
+      , offsets_(offsets)
     {}
 
     // REVIEW: Is this correctly implemented?
     local_matrix_view(
         local_matrix_view&& other
         )
-      : storage_{other.storage_}
-      , bounds_{other.bounds_}
-      , extents_{other.extents_}
-      , offsets_{other.offsets_}
+      : storage_(boost::move(other.storage_))
+      , bounds_(boost::move(other.bounds_))
+      , extents_(boost::move(other.extents_))
+      , offsets_(boost::move(other.offsets_))
     {
         other.storage_.reset();
-        other.bounds_ = matrix_dimensions({0, 0});
-        other.extents_ = matrix_dimensions({0, 0});
-        other.offsets_ = matrix_dimensions({0, 0});
+        other.bounds_ = matrix_dimensions(0, 0);
+        other.extents_ = matrix_dimensions(0, 0);
+        other.offsets_ = matrix_dimensions(0, 0);
     }
 
     local_matrix_view& operator=(
@@ -161,15 +164,15 @@ struct local_matrix_view
         local_matrix_view&& other
         )
     {
-        bounds_ = other.bounds_;
-        extents_ = other.extents_;
-        offsets_ = other.offsets_;
-        storage_ = other.storage_;
+        storage_ = boost::move(other.storage_);
+        bounds_ = boost::move(other.bounds_);
+        extents_ = boost::move(other.extents_);
+        offsets_ = boost::move(other.offsets_);
 
         other.storage_.reset();
-        other.bounds_ = matrix_dimensions({0, 0});
-        other.extents_ = matrix_dimensions({0, 0});
-        other.offsets_ = matrix_dimensions({0, 0});
+        other.bounds_ = matrix_dimensions(0, 0);
+        other.extents_ = matrix_dimensions(0, 0);
+        other.offsets_ = matrix_dimensions(0, 0);
 
         return *this;
     }

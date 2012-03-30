@@ -42,7 +42,7 @@ struct local_matrix
     local_matrix(
         std::initializer_list<std::vector<value_type> > m
         )
-      : view_{m} 
+      : view_(m) 
     {}
 
     local_matrix(
@@ -50,7 +50,7 @@ struct local_matrix
       , size_type cols = 1
       , value_type init = value_type()
         )
-      : view_{rows, cols, init} 
+      : view_(rows, cols, init) 
     {} 
 
     local_matrix(
@@ -74,7 +74,7 @@ struct local_matrix
     local_matrix(
         local_matrix&& other
         )
-      : view_{other.view_} 
+      : view_(boost::move(other.view_)) 
     {}
 
     local_matrix& operator=(
@@ -104,7 +104,7 @@ struct local_matrix
         local_matrix&& other
         )
     {
-        view_ = other.view_;
+        view_ = boost::move(other.view_);
 
         return *this;
     }
