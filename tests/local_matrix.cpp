@@ -9,8 +9,9 @@
 
 #include <hpxla/local_matrix.hpp>
 
-// NOTE: The view() methods of local_matrix<> are tested in
-// local_matrix_view.cpp
+// NOTE: The view() method of local_matrix<> is tested in local_matrix_view.cpp.
+// The order() and leading_dimension() methods are tested in the local BLAS
+// tests.
 
 template <
     typename Matrix
@@ -371,44 +372,74 @@ void test()
     } // }}}
 
     ///////////////////////////////////////////////////////////////////////////
-    // Indexing - operator().
 
-    { // {{{ Mutable matrix indexing - A(i, j).
+    { // {{{ Constness 
+        Matrix const m0{ { 17, 42 }
+                       , { 42, 17 } };
 
+        HPX_TEST(!m0.empty());
+
+        HPX_TEST_EQ(2U, m0.rows());
+        HPX_TEST_EQ(2U, m0.columns());
+
+        HPX_TEST_EQ(m0(0, 0), 17);
+        HPX_TEST_EQ(m0(1, 0), 42);
+        HPX_TEST_EQ(m0(0, 1), 42);
+        HPX_TEST_EQ(m0(1, 1), 17);
     } // }}}
 
-    { // {{{ Immutable matrix indexing - A(i, j).
+    ///////////////////////////////////////////////////////////////////////////
 
-    } // }}}
+    { // {{{ Vector indexing. 
+        // Brackets. 
+        Matrix m0{ 1, 2, 3 };
 
-    { // {{{ Mutable vector indexing - A(i).
+        HPX_TEST(!m0.empty());
 
-    } // }}}
+        HPX_TEST_EQ(3U, m0.rows());
+        HPX_TEST_EQ(1U, m0.columns());
 
-    { // {{{ Immutable dual indexing - A(i).
-
+        HPX_TEST_EQ(m0(0), 1);
+        HPX_TEST_EQ(m0(1), 2);
+        HPX_TEST_EQ(m0(2), 3);
     } // }}}
  
     ///////////////////////////////////////////////////////////////////////////
-    // Dimensions - rows(), columns() and empty(). 
-
-    { // {{{ rows().
-
-    } // }}}
-
-    { // {{{ columns().
-
-    } // }}}
-
-    { // {{{ empty().
-
-    } // }}}
-
-    ///////////////////////////////////////////////////////////////////////////
-    // Raw pointer access.
 
     { // {{{ Raw access and indexing.
+        typedef typename Matrix::pointer pointer;
+        typedef typename Matrix::index_type indexer;
 
+        Matrix m0{ { 1, 2, 3 }
+                 , { 4, 5, 6 } };
+
+        HPX_SANITY(!m0.empty());
+
+        HPX_SANITY_EQ(2U, m0.rows());
+        HPX_SANITY_EQ(3U, m0.columns());
+
+        HPX_SANITY_EQ(m0(0, 0), 1);
+        HPX_SANITY_EQ(m0(0, 1), 2);
+        HPX_SANITY_EQ(m0(0, 2), 3);
+        HPX_SANITY_EQ(m0(1, 0), 4);
+        HPX_SANITY_EQ(m0(1, 1), 5);
+        HPX_SANITY_EQ(m0(1, 2), 6);
+
+        hpxla::matrix_dimensions bounds(2, 3);
+
+        pointer p0 = m0.data();
+
+        HPX_TEST_EQ(p0[indexer::index(0, 0, bounds)], 1); 
+        HPX_TEST_EQ(p0[indexer::index(0, 1, bounds)], 2); 
+        HPX_TEST_EQ(p0[indexer::index(0, 2, bounds)], 3); 
+        HPX_TEST_EQ(p0[indexer::index(1, 0, bounds)], 4); 
+        HPX_TEST_EQ(p0[indexer::index(1, 1, bounds)], 5); 
+        HPX_TEST_EQ(p0[indexer::index(1, 2, bounds)], 6); 
+
+        p0[indexer::index(1, 2, bounds)] = 7;
+
+        HPX_TEST_EQ(m0(1, 2), 7);
+        HPX_TEST_EQ(p0[indexer::index(1, 2, bounds)], 7); 
     } // }}} 
 }
 
