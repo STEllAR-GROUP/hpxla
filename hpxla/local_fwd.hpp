@@ -20,27 +20,30 @@ namespace hpxla
 
 struct column_major_index
 {
-    typedef std::size_t result_type;
-
-    std::size_t operator()(
+    static std::size_t index(
         std::size_t row
       , std::size_t col
       , matrix_dimensions bounds
       , matrix_dimensions offsets = matrix_dimensions(0, 0)
-        ) const
+        ) 
     {
         BOOST_ASSERT(row < bounds.rows);
         BOOST_ASSERT(col < bounds.cols);
 
         return (col + offsets.cols) * bounds.rows + (row + offsets.rows);
     }
+
+    static std::size_t leading_dimension(
+        matrix_dimensions bounds
+        )
+    {
+        return bounds.rows;
+    }
 };
 
 struct row_major_index
 {
-    typedef std::size_t result_type;
-
-    std::size_t operator()(
+    static std::size_t index(
         std::size_t row
       , std::size_t col
       , matrix_dimensions bounds
@@ -51,6 +54,13 @@ struct row_major_index
         BOOST_ASSERT(col < bounds.cols);
 
         return (row + offsets.rows) * bounds.cols + (col + offsets.cols);
+    }
+
+    static std::size_t leading_dimension(
+        matrix_dimensions bounds
+        )
+    {
+        return bounds.cols;
     }
 };
 

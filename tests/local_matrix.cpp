@@ -105,6 +105,57 @@ void test()
         HPX_TEST_EQ(m3(1, 0), 4);
         HPX_TEST_EQ(m3(1, 1), 5);
         HPX_TEST_EQ(m3(1, 2), 6);
+
+        // 1 x n matrix. Note that the extra set of brackets distinguish this
+        // ctor from the std::vector<> ctor.
+        Matrix m4({ { 1, 2, 3 } });
+
+        HPX_TEST(!m4.empty());
+
+        HPX_TEST_EQ(1U, m4.rows());
+        HPX_TEST_EQ(3U, m4.columns());
+
+        HPX_TEST_EQ(m4(0, 0), 1);
+        HPX_TEST_EQ(m4(0, 1), 2);
+        HPX_TEST_EQ(m4(0, 2), 3);
+    } // }}}  
+
+    { // {{{ std::vector<> ctor.
+        // Brackets in parenthesis. 
+        Matrix m0({ 1, 2, 3 });
+
+        HPX_TEST(!m0.empty());
+
+        HPX_TEST_EQ(3U, m0.rows());
+        HPX_TEST_EQ(1U, m0.columns());
+
+        HPX_TEST_EQ(m0(0, 0), 1);
+        HPX_TEST_EQ(m0(1, 0), 2);
+        HPX_TEST_EQ(m0(2, 0), 3);
+
+        // Brackets. 
+        Matrix m1{ 1, 2, 3 };
+
+        HPX_TEST(!m1.empty());
+
+        HPX_TEST_EQ(3U, m1.rows());
+        HPX_TEST_EQ(1U, m1.columns());
+
+        HPX_TEST_EQ(m1(0, 0), 1);
+        HPX_TEST_EQ(m1(1, 0), 2);
+        HPX_TEST_EQ(m1(2, 0), 3);
+
+        // Brackets assignment. 
+        Matrix m2 = { 1, 2, 3 };
+
+        HPX_TEST(!m2.empty());
+
+        HPX_TEST_EQ(3U, m2.rows());
+        HPX_TEST_EQ(1U, m2.columns());
+
+        HPX_TEST_EQ(m2(0, 0), 1);
+        HPX_TEST_EQ(m2(1, 0), 2);
+        HPX_TEST_EQ(m2(2, 0), 3);
     } // }}}  
  
     { // {{{ Dimensions + initial value ctor.

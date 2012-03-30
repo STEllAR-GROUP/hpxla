@@ -17,8 +17,6 @@
 #include <boost/move/move.hpp>
 #include <boost/shared_ptr.hpp>
 
-#include <iostream>
-
 namespace hpxla
 {
 
@@ -47,13 +45,13 @@ struct local_matrix_view
     typedef Index index_type;
 
   private:
+    BOOST_COPYABLE_AND_MOVEABLE(local_matrix);
+
     boost::shared_ptr<std::vector<value_type> > storage_; 
 
     matrix_dimensions bounds_;  // Actual dimensions of the subject matrix.
     matrix_dimensions extents_; // Dimensions of this view.
     matrix_dimensions offsets_; // Offsets of this view.
-
-    index_type indexer_;        // Indexing object.
 
   public:
     /// Constructs a new, empty matrix.
@@ -63,6 +61,7 @@ struct local_matrix_view
       , offsets_(0, 0)
     {}
 
+#if defined(HPX_HAVE_CXX11_STD_INITIALIZER_LIST)
     /// Constructs a new matrix initialized from the matrix \a m.
     local_matrix_view(
         std::initializer_list<std::vector<value_type> > m
@@ -94,6 +93,33 @@ struct local_matrix_view
             }
         }
     }
+
+    /// Constructs a new vector (n x 1 matrix) initialized from the vector \a v.
+    local_matrix_view(
+        std::initializer_list<value_type> v
+        )
+      : bounds_(0, 0)
+      , extents_(0, 0)
+      , offsets_(0, 0)
+    {
+        if (0 != v.size())
+        {
+            bounds_.rows = extents_.rows = v.size();
+            bounds_.cols = extents_.cols = 1;
+
+            storage_.reset(new std::vector<value_type>(bounds_.rows));
+
+            typedef typename std::initializer_list<
+                value_type
+            >::const_iterator const_iterator; 
+
+            const_iterator it = v.begin();
+
+            for (size_type i = 0; i < bounds_.rows; ++i, ++it)
+                (*this)(i) = *it; 
+        }
+    }
+#endif
 
     /// Construct a new matrix with dimensions \a rows x \a cols. Each element
     /// of the matrix is initialized to \a init.
@@ -134,7 +160,7 @@ struct local_matrix_view
 
     // REVIEW: Is this correctly implemented?
     local_matrix_view(
-        local_matrix_view&& other
+        BOOST_RV_REF(local_matrix_view) other
         )
       : storage_(boost::move(other.storage_))
       , bounds_(boost::move(other.bounds_))
@@ -148,7 +174,7 @@ struct local_matrix_view
     }
 
     local_matrix_view& operator=(
-        local_matrix_view const& other
+        BOOST_COPY_ASSIGN_REF(local_matrix_view) other
         )
     {
         bounds_ = other.bounds_;
@@ -161,7 +187,7 @@ struct local_matrix_view
 
     // REVIEW: Is this correctly implemented?
     local_matrix_view& operator=(
-        local_matrix_view&& other
+        BOOST_RV_REF(local_matrix_view) other
         )
     {
         storage_ = boost::move(other.storage_);
@@ -182,7 +208,7 @@ struct local_matrix_view
       , size_type col
         )
     {
-        return (*storage_)[indexer_(row, col, bounds_, offsets_)];
+        return (*storage_)[index_type::index(row, col, bounds_, offsets_)];
     }
 
     reference operator()(
@@ -190,7 +216,7 @@ struct local_matrix_view
         )
     {
         BOOST_ASSERT(1 == extents_.cols);
-        return (*storage_)[indexer_(row, 1, bounds_, offsets_)];
+        return (*storage_)[index_type::index(row, 0, bounds_, offsets_)];
     }
 
     const_reference operator()(
@@ -198,7 +224,7 @@ struct local_matrix_view
       , size_type col
         ) const
     {
-        return (*storage_)[indexer_(row, col, bounds_, offsets_)];
+        return (*storage_)[index_type::index(row, col, bounds_, offsets_)];
     }
 
     const_reference operator()(
@@ -206,7 +232,7 @@ struct local_matrix_view
         ) const
     {
         BOOST_ASSERT(1 == extents_.cols);
-        return (*storage_)[indexer_(row, 1, bounds_, offsets_)];
+        return (*storage_)[index_type::index(row, 0, bounds_, offsets_)];
     }
 
     size_type rows() const
@@ -226,12 +252,17 @@ struct local_matrix_view
 
     pointer data()
     {
-        return storage_->data() + indexer_(0, 0, bounds_, offsets_);
+        return storage_->data() + index_type::index(0, 0, bounds_, offsets_);
     }
 
     const_pointer data() const
     {
-        return storage_->data() + indexer_(0, 0, bounds_, offsets_);
+        return storage_->data() + index_type::index(0, 0, bounds_, offsets_);
+    }
+
+    size_type leading_dimension() const
+    {
+        return index_type::leading_dimension(bounds_);
     }
 };
 

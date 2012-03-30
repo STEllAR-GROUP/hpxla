@@ -34,16 +34,26 @@ struct local_matrix
     typedef typename view_type::index_type index_type;
 
   private:
+    BOOST_COPYABLE_AND_MOVEABLE(local_matrix);
+
     view_type view_;
 
   public:
     local_matrix() {}
 
+#if defined(HPX_HAVE_CXX11_STD_INITIALIZER_LIST)
     local_matrix(
         std::initializer_list<std::vector<value_type> > m
         )
       : view_(m) 
     {}
+
+    local_matrix(
+        std::initializer_list<value_type> v
+        )
+      : view_(v) 
+    {}
+#endif
 
     local_matrix(
         size_type rows
@@ -72,13 +82,13 @@ struct local_matrix
 
     // REVIEW: Is this correctly implemented?
     local_matrix(
-        local_matrix&& other
+        BOOST_RV_REF(local_matrix) other
         )
       : view_(boost::move(other.view_)) 
     {}
 
     local_matrix& operator=(
-        local_matrix const& other
+        BOOST_COPY_ASSIGN_REF(local_matrix) other
         )
     {
         view_.bounds_ = other.view_.bounds_;
@@ -101,7 +111,7 @@ struct local_matrix
 
     // REVIEW: Is this correctly implemented?
     local_matrix& operator=(
-        local_matrix&& other
+        BOOST_RV_REF(local_matrix) other
         )
     {
         view_ = boost::move(other.view_);
@@ -162,6 +172,11 @@ struct local_matrix
     const_pointer data() const
     {
         return view_.data();
+    }
+
+    size_type leading_dimension() const
+    {
+        return view_.leading_dimension();
     }
 
     view_type& view()

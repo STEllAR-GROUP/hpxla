@@ -56,6 +56,11 @@ include_directories(${BLAS_INCLUDE_DIR})
 link_directories(${BLAS_LIBRARY_DIR})
 
 ################################################################################
+hpx_check_for_cxx11_std_initializer_list(HPX_CXX11_STD_INITIALIZER_LIST
+  DEFINITIONS HPX_HAVE_CXX11_STD_INITIALIZER_LIST
+  ROOT        ${HPX_ROOT})
+
+################################################################################
 add_hpx_pseudo_target(tests)
 add_subdirectory(tests)
 
