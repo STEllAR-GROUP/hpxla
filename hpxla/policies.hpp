@@ -1,0 +1,50 @@
+////////////////////////////////////////////////////////////////////////////////
+//  Copyright (c) 2012 Bryce Adelstein-Lelbach
+//
+//  Distributed under the Boost Software License, Version 1.0. (See accompanying
+//  file LICENSE_1_0.txt or copy at http://www.boost.org/LICENSE_1_0.txt)
+////////////////////////////////////////////////////////////////////////////////
+
+#if !defined(HPXLA_E6746F85_9146_453B_93D0_705AEAF1F9AF)
+#define HPXLA_E6746F85_9146_453B_93D0_705AEAF1F9AF
+
+#include <hpx/util/unused.hpp>
+
+#include <hpxla/policies/indexing_policies.hpp>
+
+namespace hpxla
+{
+
+template <
+    typename IndexingPolicy = policy::column_major_indexing
+  , typename AllocationPolicy = std::allocator<hpx::util::unused_type>
+>
+struct local_matrix_policy
+{
+    typedef IndexingPolicy indexing_policy_type;
+    typedef AllocationPolicy allocation_policy_type;
+};
+
+template <
+    typename IndexingPolicy = policy::column_major_indexing
+  , typename PartitioningPolicy = hpx::util::unused_type
+  , typename DistributionPolicy = hpx::util::unused_type
+  , typename AllocationPolicy = std::allocator<hpx::util::unused_type>
+>
+struct distributed_matrix_policy
+{
+    typedef local_matrix_policy<
+        IndexingPolicy
+      , AllocationPolicy
+    > local_policy_type;
+
+    typedef IndexingPolicy indexing_policy_type;
+    typedef PartitioningPolicy partitioning_policy_type;
+    typedef DistributionPolicy distribution_policy_type;
+    typedef AllocationPolicy allocation_policy_type;
+};
+
+}
+
+#endif // HPXLA_E6746F85_9146_453B_93D0_705AEAF1F9AF
+

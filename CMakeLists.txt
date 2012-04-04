@@ -64,3 +64,6 @@ hpx_check_for_cxx11_std_initializer_list(HPX_CXX11_STD_INITIALIZER_LIST
 add_hpx_pseudo_target(tests)
 add_subdirectory(tests)
 
+################################################################################
+add_subdirectory(src)
+

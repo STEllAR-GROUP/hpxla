@@ -25,112 +25,114 @@ namespace hpxla { namespace blas
 // {{{ ASUM
 
 /// BLAS1: Computes the sum of magnitudes of the vector elements.
+template <
+    typename Policy
+>
 inline float asum(
-    local_matrix_view<float> const& X
-  , std::size_t strideX = 1
+    local_matrix_view<float, Policy> const& X
     )
 {
-    BOOST_ASSERT(1 == X.columns());
-    return ::cblas_sasum(X.rows(), X.data(), strideX); 
+    return ::cblas_sasum(X.rows(), X.data(), X.vector_stride()); 
 }
 
 /// BLAS1: Computes the sum of magnitudes of the vector elements.
+template <
+    typename Policy
+>
 inline float asum(
-    local_matrix_view<std::complex<float> > const& X
-  , std::size_t strideX = 1
+    local_matrix_view<std::complex<float>, Policy> const& X
     )
 {
-    BOOST_ASSERT(1 == X.columns());
-    return ::cblas_scasum(X.rows(), (void const*) X.data(), strideX); 
+    return ::cblas_scasum(X.rows(), (void const*) X.data(), X.vector_stride()); 
 }
 
 /// BLAS1: Computes the sum of magnitudes of the vector elements.
+template <
+    typename Policy
+>
 inline double asum(
-    local_matrix_view<double> const& X
-  , std::size_t strideX = 1
+    local_matrix_view<double, Policy> const& X
     )
 {
-    BOOST_ASSERT(1 == X.columns());
-    return ::cblas_dasum(X.rows(), X.data(), strideX); 
+    return ::cblas_dasum(X.rows(), X.data(), X.vector_stride()); 
 }
 
 /// BLAS1: Computes the sum of magnitudes of the vector elements.
+template <
+    typename Policy
+>
 inline double asum(
-    local_matrix_view<std::complex<double> > const& X
-  , std::size_t strideX = 1
+    local_matrix_view<std::complex<double>, Policy> const& X
     )
 {
-    BOOST_ASSERT(1 == X.columns());
-    return ::cblas_dzasum(X.rows(), (void const*) X.data(), strideX); 
+    return ::cblas_dzasum(X.rows(), (void const*) X.data(), X.vector_stride()); 
 }
 
 // }}}
 
 ///////////////////////////////////////////////////////////////////////////////
-// {{{ AXPY (TODO: inline version)
+// {{{ AXPY
 
 /// BLAS1: Computes a vector-scalar product and adds the result to a vector.
+template <
+    typename Policy
+>
 inline void axpy(
     float a
-  , local_matrix_view<float> const& X
-  , local_matrix_view<float>& Y
-  , std::size_t strideX = 1
-  , std::size_t strideY = 1
+  , local_matrix_view<float, Policy> const& X
+  , local_matrix_view<float, Policy>& Y
     )
 {
-    BOOST_ASSERT(1 == X.columns());
-    BOOST_ASSERT(1 == Y.columns());
     BOOST_ASSERT(X.rows() == Y.rows());
-    ::cblas_saxpy(X.rows(), a, X.data(), strideX, Y.data(), strideY);
+    ::cblas_saxpy(X.rows(), a, X.data(), X.vector_stride()
+                             , Y.data(), Y.vector_stride());
 }
 
 /// BLAS1: Computes a vector-scalar product and adds the result to a vector.
+template <
+    typename Policy
+>
 inline void axpy(
     std::complex<float> a
-  , local_matrix_view<std::complex<float> > const& X
-  , local_matrix_view<std::complex<float> >& Y
-  , std::size_t strideX = 1
-  , std::size_t strideY = 1
+  , local_matrix_view<std::complex<float>, Policy> const& X
+  , local_matrix_view<std::complex<float>, Policy>& Y
     )
 {
-    BOOST_ASSERT(1 == X.columns());
-    BOOST_ASSERT(1 == Y.columns());
     BOOST_ASSERT(X.rows() == Y.rows());
     ::cblas_caxpy(X.rows(), (void const*) &a
-                          , (void const*) X.data(), strideX
-                          , (void*)       Y.data(), strideY);
+                          , (void const*) X.data(), X.vector_stride()
+                          , (void*)       Y.data(), Y.vector_stride());
 }
 
 /// BLAS1: Computes a vector-scalar product and adds the result to a vector.
+template <
+    typename Policy
+>
 inline void axpy(
     double a
-  , local_matrix_view<double> const& X
-  , local_matrix_view<double>& Y
-  , std::size_t strideX = 1
-  , std::size_t strideY = 1
+  , local_matrix_view<double, Policy> const& X
+  , local_matrix_view<double, Policy>& Y
     )
 {
-    BOOST_ASSERT(1 == X.columns());
-    BOOST_ASSERT(1 == Y.columns());
     BOOST_ASSERT(X.rows() == Y.rows());
-    ::cblas_daxpy(X.rows(), a, X.data(), strideX, Y.data(), strideY);
+    ::cblas_daxpy(X.rows(), a, X.data(), X.vector_stride()
+                             , Y.data(), Y.vector_stride());
 }
 
 /// BLAS1: Computes a vector-scalar product and adds the result to a vector.
+template <
+    typename Policy
+>
 inline void axpy(
     std::complex<double> a
-  , local_matrix_view<std::complex<double> > const& X
-  , local_matrix_view<std::complex<double> >& Y
-  , std::size_t strideX = 1
-  , std::size_t strideY = 1
+  , local_matrix_view<std::complex<double>, Policy> const& X
+  , local_matrix_view<std::complex<double>, Policy>& Y
     )
 {
-    BOOST_ASSERT(1 == X.columns());
-    BOOST_ASSERT(1 == Y.columns());
     BOOST_ASSERT(X.rows() == Y.rows());
     ::cblas_zaxpy(X.rows(), (void const*) &a
-                          , (void const*) X.data(), strideX
-                          , (void*)       Y.data(), strideY);
+                          , (void const*) X.data(), X.vector_stride()
+                          , (void*)       Y.data(), Y.vector_stride());
 }
 
 // }}}
@@ -139,61 +141,59 @@ inline void axpy(
 // {{{ COPY 
 
 /// BLAS1: Copies vector to another vector. 
+template <
+    typename Policy
+>
 inline void copy(
-    local_matrix_view<float> const& X
-  , local_matrix_view<float>& Y
-  , std::size_t strideX = 1
-  , std::size_t strideY = 1
+    local_matrix_view<float, Policy> const& X
+  , local_matrix_view<float, Policy>& Y
     )
 {
-    BOOST_ASSERT(1 == X.columns());
-    BOOST_ASSERT(1 == Y.columns());
     BOOST_ASSERT(X.rows() == Y.rows());
-    ::cblas_scopy(X.rows(), X.data(), strideX, Y.data(), strideY);
+    ::cblas_scopy(X.rows(), X.data(), X.vector_stride()
+                          , Y.data(), Y.vector_stride());
 }
 
 /// BLAS1: Copies vector to another vector. 
+template <
+    typename Policy
+>
 inline void copy(
-    local_matrix_view<std::complex<float> > const& X
-  , local_matrix_view<std::complex<float> >& Y
-  , std::size_t strideX = 1
-  , std::size_t strideY = 1
+    local_matrix_view<std::complex<float>, Policy> const& X
+  , local_matrix_view<std::complex<float>, Policy>& Y
     )
 {
-    BOOST_ASSERT(1 == X.columns());
-    BOOST_ASSERT(1 == Y.columns());
     BOOST_ASSERT(X.rows() == Y.rows());
-    ::cblas_ccopy(X.rows(), (void const*) X.data(), strideX
-                          , (void*)       Y.data(), strideY);
+    ::cblas_ccopy(X.rows(), (void const*) X.data(), X.vector_stride()
+                          , (void*)       Y.data(), Y.vector_stride());
 }
 
 /// BLAS1: Copies vector to another vector. 
+template <
+    typename Policy
+>
 inline void copy(
-    local_matrix_view<double> const& X
-  , local_matrix_view<double>& Y
-  , std::size_t strideX = 1
-  , std::size_t strideY = 1
+    local_matrix_view<double, Policy> const& X
+  , local_matrix_view<double, Policy>& Y
     )
 {
-    BOOST_ASSERT(1 == X.columns());
-    BOOST_ASSERT(1 == Y.columns());
     BOOST_ASSERT(X.rows() == Y.rows());
-    ::cblas_dcopy(X.rows(), X.data(), strideX, Y.data(), strideY);
+    ::cblas_dcopy(X.rows(), X.data(), X.vector_stride()
+                          , Y.data(), Y.vector_stride());
 }
 
 /// BLAS1: Copies vector to another vector. 
+template <
+    typename Policy
+>
 inline void copy(
-    local_matrix_view<std::complex<double> > const& X
-  , local_matrix_view<std::complex<double> >& Y
-  , std::size_t strideX = 1
-  , std::size_t strideY = 1
+    local_matrix_view<std::complex<double>, Policy> const& X
+  , local_matrix_view<std::complex<double>, Policy>& Y
     )
 {
-    BOOST_ASSERT(1 == X.columns());
-    BOOST_ASSERT(1 == Y.columns());
     BOOST_ASSERT(X.rows() == Y.rows());
-    ::cblas_zcopy(X.rows(), (void const*) X.data(), strideX
-                          , (void*)       Y.data(), strideY);
+    ::cblas_zcopy(X.rows(), (void const*) X.data(), X.vector_stride()
+                          , (void*)       Y.data(), Y.vector_stride());
 }
 
 // }}}
@@ -202,65 +202,70 @@ inline void copy(
 // {{{ DOT
 
 /// BLAS1: Computes a vector-vector dot product.
+template <
+    typename Policy
+>
 inline float dot(
-    local_matrix_view<float> const& X
-  , local_matrix_view<float> const& Y
-  , std::size_t strideX = 1
-  , std::size_t strideY = 1
+    local_matrix_view<float, Policy> const& X
+  , local_matrix_view<float, Policy> const& Y
     )
 {
-    BOOST_ASSERT(1 == X.columns());
-    BOOST_ASSERT(1 == Y.columns());
     BOOST_ASSERT(X.rows() == Y.rows());
-    return ::cblas_sdot(X.rows(), X.data(), strideX, Y.data(), strideY); 
+    return ::cblas_sdot(X.rows(), X.data(), X.vector_stride()
+                                , Y.data(), Y.vector_stride()); 
 }
 
 /// BLAS1: Computes a vector-vector dot product.
+template <
+    typename Policy
+>
 inline double dot(
-    local_matrix_view<double> const& X
-  , local_matrix_view<double> const& Y
-  , std::size_t strideX = 1
-  , std::size_t strideY = 1
+    local_matrix_view<double, Policy> const& X
+  , local_matrix_view<double, Policy> const& Y
     )
 {
-    BOOST_ASSERT(1 == X.columns());
-    BOOST_ASSERT(1 == Y.columns());
     BOOST_ASSERT(X.rows() == Y.rows());
-    return ::cblas_ddot(X.rows(), X.data(), strideX, Y.data(), strideY); 
+    return ::cblas_ddot(X.rows(), X.data(), X.vector_stride()
+                                , Y.data(), Y.vector_stride()); 
 }
 
 // }}}
 
 ///////////////////////////////////////////////////////////////////////////////
-// {{{ SDOT
+// {{{ SDSDOT
 
 /// BLAS1: Computes a vector-vector dot product with extended precision.
-inline float sdot(
-    local_matrix_view<float> const& X
-  , local_matrix_view<float> const& Y
+template <
+    typename Policy
+>
+inline float sdsdot(
+    local_matrix_view<float, Policy> const& X
+  , local_matrix_view<float, Policy> const& Y
   , float sb = 0.0
-  , std::size_t strideX = 1
-  , std::size_t strideY = 1
     )
 {
-    BOOST_ASSERT(1 == X.columns());
-    BOOST_ASSERT(1 == Y.columns());
     BOOST_ASSERT(X.rows() == Y.rows());
-    return ::cblas_sdsdot(X.rows(), sb, X.data(), strideX, Y.data(), strideY); 
+    return ::cblas_sdsdot(X.rows(), sb, X.data(), X.vector_stride()
+                                      , Y.data(), Y.vector_stride()); 
 }
 
+// }}}
+
+///////////////////////////////////////////////////////////////////////////////
+// {{{ DSDOT
+
 /// BLAS1: Computes a vector-vector dot product with extended precision.
-inline double sdot(
-    local_matrix_view<float> const& X
-  , local_matrix_view<float> const& Y
-  , std::size_t strideX = 1
-  , std::size_t strideY = 1
+template <
+    typename Policy
+>
+inline double dsdot(
+    local_matrix_view<float, Policy> const& X
+  , local_matrix_view<float, Policy> const& Y
     )
 {
-    BOOST_ASSERT(1 == X.columns());
-    BOOST_ASSERT(1 == Y.columns());
     BOOST_ASSERT(X.rows() == Y.rows());
-    return ::cblas_dsdot(X.rows(), X.data(), strideX, Y.data(), strideY); 
+    return ::cblas_dsdot(X.rows(), X.data(), X.vector_stride()
+                                 , Y.data(), Y.vector_stride()); 
 }
 
 // }}}
@@ -269,37 +274,35 @@ inline double sdot(
 // {{{ DOTC
 
 /// BLAS1: Computes a dot product of a conjugated vector with another vector.
+template <
+    typename Policy
+>
 inline std::complex<float> dotc(
-    local_matrix_view<std::complex<float> > const& X
-  , local_matrix_view<std::complex<float> > const& Y
-  , std::size_t strideX = 1
-  , std::size_t strideY = 1
+    local_matrix_view<std::complex<float>, Policy> const& X
+  , local_matrix_view<std::complex<float>, Policy> const& Y
     )
 {
-    BOOST_ASSERT(1 == X.columns());
-    BOOST_ASSERT(1 == Y.columns());
     BOOST_ASSERT(X.rows() == Y.rows());
     std::complex<float> r(0.0, 0.0);
-    ::cblas_cdotc_sub(X.rows(), (void const*) X.data(), strideX
-                              , (void*)       Y.data(), strideY
+    ::cblas_cdotc_sub(X.rows(), (void const*) X.data(), X.vector_stride()
+                              , (void*)       Y.data(), Y.vector_stride()
                               , (void*)       &r);
     return r; 
 }
 
 /// BLAS1: Computes a dot product of a conjugated vector with another vector.
+template <
+    typename Policy
+>
 inline std::complex<double> dotc(
-    local_matrix_view<std::complex<double> > const& X
-  , local_matrix_view<std::complex<double> > const& Y
-  , std::size_t strideX = 1
-  , std::size_t strideY = 1
+    local_matrix_view<std::complex<double>, Policy> const& X
+  , local_matrix_view<std::complex<double>, Policy> const& Y
     )
 {
-    BOOST_ASSERT(1 == X.columns());
-    BOOST_ASSERT(1 == Y.columns());
     BOOST_ASSERT(X.rows() == Y.rows());
     std::complex<double> r(0.0, 0.0);
-    ::cblas_zdotc_sub(X.rows(), (void const*) X.data(), strideX
-                              , (void*)       Y.data(), strideY
+    ::cblas_zdotc_sub(X.rows(), (void const*) X.data(), X.vector_stride()
+                              , (void*)       Y.data(), Y.vector_stride()
                               , (void*)       &r);
     return r; 
 }
@@ -310,37 +313,35 @@ inline std::complex<double> dotc(
 // {{{ DOTU
 
 /// BLAS1: Computes a dot product of a conjugated vector with another vector.
+template <
+    typename Policy
+>
 inline std::complex<float> dotu(
-    local_matrix_view<std::complex<float> > const& X
-  , local_matrix_view<std::complex<float> > const& Y
-  , std::size_t strideX = 1
-  , std::size_t strideY = 1
+    local_matrix_view<std::complex<float>, Policy> const& X
+  , local_matrix_view<std::complex<float>, Policy> const& Y
     )
 {
-    BOOST_ASSERT(1 == X.columns());
-    BOOST_ASSERT(1 == Y.columns());
     BOOST_ASSERT(X.rows() == Y.rows());
     std::complex<float> r(0.0, 0.0);
-    ::cblas_cdotu_sub(X.rows(), (void const*) X.data(), strideX
-                              , (void*)       Y.data(), strideY
+    ::cblas_cdotu_sub(X.rows(), (void const*) X.data(), X.vector_stride()
+                              , (void*)       Y.data(), Y.vector_stride()
                               , (void*)       &r);
     return r; 
 }
 
 /// BLAS1: Computes a dot product of a conjugated vector with another vector.
+template <
+    typename Policy
+>
 inline std::complex<double> dotu(
-    local_matrix_view<std::complex<double> > const& X
-  , local_matrix_view<std::complex<double> > const& Y
-  , std::size_t strideX = 1
-  , std::size_t strideY = 1
+    local_matrix_view<std::complex<double>, Policy> const& X
+  , local_matrix_view<std::complex<double>, Policy> const& Y
     )
 {
-    BOOST_ASSERT(1 == X.columns());
-    BOOST_ASSERT(1 == Y.columns());
     BOOST_ASSERT(X.rows() == Y.rows());
     std::complex<double> r(0.0, 0.0);
-    ::cblas_zdotu_sub(X.rows(), (void const*) X.data(), strideX
-                              , (void*)       Y.data(), strideY
+    ::cblas_zdotu_sub(X.rows(), (void const*) X.data(), X.vector_stride()
+                              , (void*)       Y.data(), Y.vector_stride()
                               , (void*)       &r);
     return r; 
 }
@@ -351,43 +352,47 @@ inline std::complex<double> dotu(
 // {{{ NRM2 
 
 /// BLAS1: Computes the Euclidean norm of a vector. 
+template <
+    typename Policy
+>
 inline float nrm2(
-    local_matrix_view<float> const& X
-  , std::size_t strideX = 1
+    local_matrix_view<float, Policy> const& X
     )
 {
-    BOOST_ASSERT(1 == X.columns());
-    return ::cblas_snrm2(X.rows(), X.data(), strideX); 
+    return ::cblas_snrm2(X.rows(), X.data(), X.vector_stride()); 
 }
 
 /// BLAS1: Computes the Euclidean norm of a vector. 
+template <
+    typename Policy
+>
 inline float nrm2(
-    local_matrix_view<std::complex<float> > const& X
-  , std::size_t strideX = 1
+    local_matrix_view<std::complex<float>, Policy> const& X
     )
 {
-    BOOST_ASSERT(1 == X.columns());
-    return ::cblas_scnrm2(X.rows(), (void const*) X.data(), strideX); 
+    return ::cblas_scnrm2(X.rows(), (void const*) X.data(), X.vector_stride()); 
 }
 
 /// BLAS1: Computes the Euclidean norm of a vector. 
+template <
+    typename Policy
+>
 inline double nrm2(
-    local_matrix_view<double> const& X
-  , std::size_t strideX = 1
+    local_matrix_view<double, Policy> const& X
     )
 {
-    BOOST_ASSERT(1 == X.columns());
-    return ::cblas_dnrm2(X.rows(), X.data(), strideX); 
+    return ::cblas_dnrm2(X.rows(), X.data(), X.vector_stride()); 
 }
 
 /// BLAS1: Computes the Euclidean norm of a vector. 
+template <
+    typename Policy
+>
 inline double nrm2(
-    local_matrix_view<std::complex<double> > const& X
-  , std::size_t strideX = 1
+    local_matrix_view<std::complex<double>, Policy> const& X
     )
 {
-    BOOST_ASSERT(1 == X.columns());
-    return ::cblas_dznrm2(X.rows(), (void const*) X.data(), strideX); 
+    return ::cblas_dznrm2(X.rows(), (void const*) X.data(), X.vector_stride()); 
 }
 
 // }}}
@@ -396,35 +401,35 @@ inline double nrm2(
 // {{{ ROT 
 
 /// BLAS1: Performs rotation of points in the plane.
+template <
+    typename Policy
+>
 inline void rot(
-    local_matrix_view<float>& X
-  , local_matrix_view<float>& Y
+    local_matrix_view<float, Policy>& X
+  , local_matrix_view<float, Policy>& Y
   , float c
   , float s
-  , std::size_t strideX = 1
-  , std::size_t strideY = 1
     )
 {
-    BOOST_ASSERT(1 == X.columns());
-    BOOST_ASSERT(1 == Y.columns());
     BOOST_ASSERT(X.rows() == Y.rows());
-    ::cblas_srot(X.rows(), X.data(), strideX, Y.data(), strideY, c, s); 
+    ::cblas_srot(X.rows(), X.data(), X.vector_stride()
+                         , Y.data(), Y.vector_stride(), c, s); 
 } 
 
 /// BLAS1: Performs rotation of points in the plane.
+template <
+    typename Policy
+>
 inline void rot(
-    local_matrix_view<double>& X
-  , local_matrix_view<double>& Y
+    local_matrix_view<double, Policy>& X
+  , local_matrix_view<double, Policy>& Y
   , double c
   , double s
-  , std::size_t strideX = 1
-  , std::size_t strideY = 1
     )
 {
-    BOOST_ASSERT(1 == X.columns());
-    BOOST_ASSERT(1 == Y.columns());
     BOOST_ASSERT(X.rows() == Y.rows());
-    ::cblas_drot(X.rows(), X.data(), strideX, Y.data(), strideY, c, s); 
+    ::cblas_drot(X.rows(), X.data(), X.vector_stride()
+                         , Y.data(), Y.vector_stride(), c, s); 
 } 
 
 // }}}
@@ -460,67 +465,65 @@ inline void rotg(
 // {{{ ROTM 
 
 /// BLAS1: Performs modified Givens rotation of points in the plane.
+template <
+    typename Policy
+>
 inline void rotm(
-    local_matrix_view<float>& X
-  , local_matrix_view<float>& Y
-  , local_matrix_view<float> const& param
-  , std::size_t strideX = 1
-  , std::size_t strideY = 1
+    local_matrix_view<float, Policy>& X
+  , local_matrix_view<float, Policy>& Y
+  , local_matrix_view<float, Policy> const& param
     )
 {
-    BOOST_ASSERT(1 == param.columns()); 
     BOOST_ASSERT(5 == param.rows()); 
-    BOOST_ASSERT(1 == X.columns());
-    BOOST_ASSERT(1 == Y.columns());
     BOOST_ASSERT(X.rows() == Y.rows());
-    ::cblas_srotm(X.rows(), X.data(), strideX, Y.data(), strideY, param.data()); 
+    ::cblas_srotm(X.rows(), X.data(), X.vector_stride()
+                          , Y.data(), Y.vector_stride(), param.data()); 
 } 
 
 /// BLAS1: Performs modified Givens rotation of points in the plane.
+template <
+    typename Policy
+>
 inline void rotm(
-    local_matrix_view<float>& X
-  , local_matrix_view<float>& Y
+    local_matrix_view<float, Policy>& X
+  , local_matrix_view<float, Policy>& Y
   , boost::array<float, 5> const& param
-  , std::size_t strideX = 1
-  , std::size_t strideY = 1
     )
 {
-    BOOST_ASSERT(1 == X.columns());
-    BOOST_ASSERT(1 == Y.columns());
     BOOST_ASSERT(X.rows() == Y.rows());
-    ::cblas_srotm(X.rows(), X.data(), strideX, Y.data(), strideY, param.data()); 
+    ::cblas_srotm(X.rows(), X.data(), X.vector_stride()
+                          , Y.data(), Y.vector_stride(), param.data()); 
 } 
 
 /// BLAS1: Performs modified Givens rotation of points in the plane.
+template <
+    typename Policy
+>
 inline void rotm(
-    local_matrix_view<double>& X
-  , local_matrix_view<double>& Y
-  , local_matrix_view<double> const& param
-  , std::size_t strideX = 1
-  , std::size_t strideY = 1
+    local_matrix_view<double, Policy>& X
+  , local_matrix_view<double, Policy>& Y
+  , local_matrix_view<double, Policy> const& param
     )
 {
-    BOOST_ASSERT(1 == param.columns()); 
     BOOST_ASSERT(5 == param.rows()); 
-    BOOST_ASSERT(1 == X.columns());
-    BOOST_ASSERT(1 == Y.columns());
     BOOST_ASSERT(X.rows() == Y.rows());
-    ::cblas_drotm(X.rows(), X.data(), strideX, Y.data(), strideY, param.data()); 
+    ::cblas_drotm(X.rows(), X.data(), X.vector_stride()
+                          , Y.data(), Y.vector_stride(), param.data()); 
 } 
 
 /// BLAS1: Performs modified Givens rotation of points in the plane.
+template <
+    typename Policy
+>
 inline void rotm(
-    local_matrix_view<double>& X
-  , local_matrix_view<double>& Y
+    local_matrix_view<double, Policy>& X
+  , local_matrix_view<double, Policy>& Y
   , boost::array<double, 5> const& param
-  , std::size_t strideX = 1
-  , std::size_t strideY = 1
     )
 {
-    BOOST_ASSERT(1 == X.columns());
-    BOOST_ASSERT(1 == Y.columns());
     BOOST_ASSERT(X.rows() == Y.rows());
-    ::cblas_drotm(X.rows(), X.data(), strideX, Y.data(), strideY, param.data()); 
+    ::cblas_drotm(X.rows(), X.data(), X.vector_stride()
+                          , Y.data(), Y.vector_stride(), param.data()); 
 } 
 
 // }}}
@@ -529,20 +532,25 @@ inline void rotm(
 // {{{ ROTMG 
 
 /// BLAS1: Computes the parameters for a modified Givens rotation.
+template <
+    typename Policy
+>
 inline void rotmg(
     float& d1
   , float& d2
   , float& x1
   , float y1
-  , local_matrix_view<float>& param
+  , local_matrix_view<float, Policy>& param
     )
 {
-    BOOST_ASSERT(1 == param.columns()); 
     BOOST_ASSERT(5 == param.rows()); 
     ::cblas_srotmg(&d1, &d2, &x1, y1, param.data());
 }
 
 /// BLAS1: Computes the parameters for a modified Givens rotation.
+template <
+    typename Policy
+>
 inline void rotmg(
     float& d1
   , float& d2
@@ -555,20 +563,25 @@ inline void rotmg(
 }
 
 /// BLAS1: Computes the parameters for a modified Givens rotation.
+template <
+    typename Policy
+>
 inline void rotmg(
     double& d1
   , double& d2
   , double& x1
   , double y1
-  , local_matrix_view<double>& param
+  , local_matrix_view<double, Policy>& param
     )
 {
-    BOOST_ASSERT(1 == param.columns()); 
     BOOST_ASSERT(5 == param.rows()); 
     ::cblas_drotmg(&d1, &d2, &x1, y1, param.data());
 }
 
 /// BLAS1: Computes the parameters for a modified Givens rotation.
+template <
+    typename Policy
+>
 inline void rotmg(
     double& d1
   , double& d2
@@ -586,69 +599,77 @@ inline void rotmg(
 // {{{ SCAL 
 
 /// BLAS1: Computes the product of a vector by a scalar. 
+template <
+    typename Policy
+>
 inline void scal(
     float a 
-  , local_matrix_view<float>& X
-  , std::size_t strideX = 1
+  , local_matrix_view<float, Policy>& X
     )
 {
-    BOOST_ASSERT(1 == X.columns());
-    ::cblas_sscal(X.rows(), a, X.data(), strideX); 
+    ::cblas_sscal(X.rows(), a, X.data(), X.vector_stride()); 
 }
 
 /// BLAS1: Computes the product of a vector by a scalar. 
+template <
+    typename Policy
+>
 inline void scal(
     std::complex<float> a
-  , local_matrix_view<std::complex<float> >& X
-  , std::size_t strideX = 1
+  , local_matrix_view<std::complex<float>, Policy>& X
     )
 {
-    BOOST_ASSERT(1 == X.columns());
-    ::cblas_cscal(X.rows(), (void const*) &a, (void*) X.data(), strideX); 
+    ::cblas_cscal(X.rows(), (void const*) &a
+                          , (void*)       X.data(), X.vector_stride()); 
 }
 
 /// BLAS1: Computes the product of a vector by a scalar. 
+template <
+    typename Policy
+>
 inline void scal(
     float a
-  , local_matrix_view<std::complex<float> >& X
-  , std::size_t strideX = 1
+  , local_matrix_view<std::complex<float>, Policy>& X
     )
 {
-    BOOST_ASSERT(1 == X.columns());
-    ::cblas_csscal(X.rows(), a, (void*) X.data(), strideX); 
+    ::cblas_csscal(X.rows(), a, (void*) X.data(), X.vector_stride()); 
 }
 
 /// BLAS1: Computes the product of a vector by a scalar. 
+template <
+    typename Policy
+>
 inline void scal(
     double a
-  , local_matrix_view<double>& X
-  , std::size_t strideX = 1
+  , local_matrix_view<double, Policy>& X
     )
 {
-    BOOST_ASSERT(1 == X.columns());
-    ::cblas_dscal(X.rows(), a, X.data(), strideX); 
+    ::cblas_dscal(X.rows(), a, X.data(), X.vector_stride()); 
 }
 
 /// BLAS1: Computes the product of a vector by a scalar. 
+template <
+    typename Policy
+>
 inline void scal(
     std::complex<double> a
-  , local_matrix_view<std::complex<double> >& X
-  , std::size_t strideX = 1
+  , local_matrix_view<std::complex<double>, Policy>& X
     )
 {
-    BOOST_ASSERT(1 == X.columns());
-    ::cblas_zscal(X.rows(), (void const*) &a, (void*) X.data(), strideX); 
+    ::cblas_zscal(X.rows(), (void const*) &a
+                          , (void*)       X.data(), X.vector_stride()); 
 }
 
 /// BLAS1: Computes the product of a vector by a scalar. 
+template <
+    typename Policy
+>
 inline void scal(
     double a
-  , local_matrix_view<std::complex<double> >& X
-  , std::size_t strideX = 1
+  , local_matrix_view<std::complex<double>, Policy>& X
     )
 {
-    BOOST_ASSERT(1 == X.columns());
-    ::cblas_zdscal(X.rows(), a, (void*) X.data(), strideX); 
+    ::cblas_zdscal(X.rows(), a, (void*) X.data(), X.vector_stride()); 
 }
 
 // }}}
@@ -657,61 +678,59 @@ inline void scal(
 // {{{ SWAP 
 
 /// BLAS1: Swaps a vector with another vector. 
+template <
+    typename Policy
+>
 inline void swap(
-    local_matrix_view<float>& X
-  , local_matrix_view<float>& Y
-  , std::size_t strideX = 1
-  , std::size_t strideY = 1
+    local_matrix_view<float, Policy>& X
+  , local_matrix_view<float, Policy>& Y
     )
 {
-    BOOST_ASSERT(1 == X.columns());
-    BOOST_ASSERT(1 == Y.columns());
     BOOST_ASSERT(X.rows() == Y.rows());
-    ::cblas_sswap(X.rows(), X.data(), strideX, Y.data(), strideY);
+    ::cblas_sswap(X.rows(), X.data(), X.vector_stride()
+                          , Y.data(), Y.vector_stride());
 }
 
 /// BLAS1: Swaps a vector with another vector. 
+template <
+    typename Policy
+>
 inline void swap(
-    local_matrix_view<std::complex<float> >& X
-  , local_matrix_view<std::complex<float> >& Y
-  , std::size_t strideX = 1
-  , std::size_t strideY = 1
+    local_matrix_view<std::complex<float>, Policy>& X
+  , local_matrix_view<std::complex<float>, Policy>& Y
     )
 {
-    BOOST_ASSERT(1 == X.columns());
-    BOOST_ASSERT(1 == Y.columns());
     BOOST_ASSERT(X.rows() == Y.rows());
-    ::cblas_cswap(X.rows(), (void*) X.data(), strideX
-                          , (void*) Y.data(), strideY);
+    ::cblas_cswap(X.rows(), (void*) X.data(), X.vector_stride()
+                          , (void*) Y.data(), Y.vector_stride());
 }
 
 /// BLAS1: Swaps a vector with another vector. 
+template <
+    typename Policy
+>
 inline void swap(
-    local_matrix_view<double>& X
-  , local_matrix_view<double>& Y
-  , std::size_t strideX = 1
-  , std::size_t strideY = 1
+    local_matrix_view<double, Policy>& X
+  , local_matrix_view<double, Policy>& Y
     )
 {
-    BOOST_ASSERT(1 == X.columns());
-    BOOST_ASSERT(1 == Y.columns());
     BOOST_ASSERT(X.rows() == Y.rows());
-    ::cblas_dswap(X.rows(), X.data(), strideX, Y.data(), strideY);
+    ::cblas_dswap(X.rows(), X.data(), X.vector_stride()
+                          , Y.data(), Y.vector_stride());
 }
 
 /// BLAS1: Swaps a vector with another vector. 
+template <
+    typename Policy
+>
 inline void swap(
-    local_matrix_view<std::complex<double> >& X
-  , local_matrix_view<std::complex<double> >& Y
-  , std::size_t strideX = 1
-  , std::size_t strideY = 1
+    local_matrix_view<std::complex<double>, Policy>& X
+  , local_matrix_view<std::complex<double>, Policy>& Y
     )
 {
-    BOOST_ASSERT(1 == X.columns());
-    BOOST_ASSERT(1 == Y.columns());
     BOOST_ASSERT(X.rows() == Y.rows());
-    ::cblas_zswap(X.rows(), (void*) X.data(), strideX
-                          , (void*) Y.data(), strideY);
+    ::cblas_zswap(X.rows(), (void*) X.data(), X.vector_stride()
+                          , (void*) Y.data(), Y.vector_stride());
 }
 
 // }}}
@@ -720,43 +739,47 @@ inline void swap(
 // {{{ IAMAX
 
 /// BLAS1: Finds the index of the element with maximum absolute value. 
+template <
+    typename Policy
+>
 inline std::size_t iamax(
-    local_matrix_view<float> const& X
-  , std::size_t strideX = 1
+    local_matrix_view<float, Policy> const& X
     )
 {
-    BOOST_ASSERT(1 == X.columns());
-    return ::cblas_isamax(X.rows(), X.data(), strideX); 
+    return ::cblas_isamax(X.rows(), X.data(), X.vector_stride()); 
 }
 
 /// BLAS1: Finds the index of the element with maximum absolute value. 
+template <
+    typename Policy
+>
 inline std::size_t iamax(
-    local_matrix_view<std::complex<float> > const& X
-  , std::size_t strideX = 1
+    local_matrix_view<std::complex<float>, Policy> const& X
     )
 {
-    BOOST_ASSERT(1 == X.columns());
-    return ::cblas_icamax(X.rows(), (void const*) X.data(), strideX); 
+    return ::cblas_icamax(X.rows(), (void const*) X.data(), X.vector_stride()); 
 }
 
 /// BLAS1: Finds the index of the element with maximum absolute value. 
+template <
+    typename Policy
+>
 inline std::size_t iamax(
-    local_matrix_view<double> const& X
-  , std::size_t strideX = 1
+    local_matrix_view<double, Policy> const& X
     )
 {
-    BOOST_ASSERT(1 == X.columns());
-    return ::cblas_idamax(X.rows(), X.data(), strideX); 
+    return ::cblas_idamax(X.rows(), X.data(), X.vector_stride()); 
 }
 
 /// BLAS1: Finds the index of the element with maximum absolute value. 
+template <
+    typename Policy
+>
 inline std::size_t iamax(
-    local_matrix_view<std::complex<double> > const& X
-  , std::size_t strideX = 1
+    local_matrix_view<std::complex<double>, Policy> const& X
     )
 {
-    BOOST_ASSERT(1 == X.columns());
-    return ::cblas_izamax(X.rows(), (void const*) X.data(), strideX); 
+    return ::cblas_izamax(X.rows(), (void const*) X.data(), X.vector_stride()); 
 }
 
 // }}}

@@ -16,22 +16,23 @@
 #include <boost/assert.hpp>
 #include <boost/move/move.hpp>
 #include <boost/shared_ptr.hpp>
+#include <boost/make_shared.hpp>
+#include <boost/serialization/serialization.hpp>
+#include <boost/serialization/split_member.hpp>
 
 namespace hpxla
 {
 
-// TODO: Allocator support.
 // TODO: Container compatible.
-// TODO: LDA/stride stuff.
 template <
     typename T
-  , typename Index 
+  , typename Policy 
 >
 struct local_matrix_view
 {
     template <
         typename T0
-      , typename Index0
+      , typename Policy0
     >
     friend struct local_matrix;
 
@@ -40,43 +41,125 @@ struct local_matrix_view
     typedef T const& const_reference;
     typedef T* pointer;
     typedef T const* const_pointer;
-    typedef std::size_t size_type;
+    typedef boost::uint64_t size_type;
 
-    typedef Index index_type;
+    typedef Policy policy_type;
+    typedef typename Policy::indexing_policy_type indexing_policy_type;
+    typedef typename Policy::allocation_policy_type allocation_policy_type;
+
+    typedef typename allocation_policy_type::template rebind<value_type>::other
+        allocator_type;
 
   private:
     BOOST_COPYABLE_AND_MOVABLE(local_matrix_view);
 
-    boost::shared_ptr<std::vector<value_type> > storage_; 
+    typedef std::vector<
+        value_type
+      , typename allocation_policy_type::template rebind<value_type>::other
+    > storage_type;
 
-    matrix_dimensions bounds_;  // Actual dimensions of the subject matrix.
-    matrix_dimensions extents_; // Dimensions of this view.
-    matrix_dimensions offsets_; // Offsets of this view.
+    boost::shared_ptr<storage_type> storage_; 
+
+    matrix_bounds bounds_;   // Actual dimensions of the subject matrix.
+    matrix_bounds extents_;  // Dimensions of this view.
+    matrix_offsets offsets_; // Offsets of this view.
+
+    allocator_type alloc_;
+
+    boost::shared_ptr<storage_type> create_storage(
+        size_type size
+      , const_reference init = value_type()
+        )
+    {
+        // REVIEW: Use boost::move here?
+        return boost::allocate_shared<storage_type>(alloc_, size, init);
+    }
+
+    boost::shared_ptr<storage_type> create_storage(
+        storage_type const& s
+        )
+    {
+        return boost::allocate_shared<storage_type>(alloc_, s);
+    }
+
+    boost::shared_ptr<storage_type> create_storage(
+        BOOST_RV_REF(storage_type) s
+        )
+    {
+        // REVIEW: Do I need to call boost::move here?
+        return boost::allocate_shared<storage_type>(alloc_, boost::move(s));
+    }
+
+    friend class boost::serialization::access;
+
+    BOOST_SERIALIZATION_SPLIT_MEMBER()
+
+    template <
+        typename Archive
+    >
+    void save(
+        Archive& ar
+      , unsigned version
+        ) const 
+    {
+        ar & extents_;
+
+        // REVIEW: Will the serialized data be smaller if we serialize this as
+        // a contigous block of memory (e.g. array?).
+        for (size_type i = 0; i < rows(); ++i)
+            for (size_type j = 0; j < columns(); ++j)
+                ar & (*this)(i, j); 
+    }
+
+    template <
+        typename Archive
+    >
+    void load(
+        Archive& ar
+      , unsigned version
+        )
+    {
+        ar & extents_;
+
+        bounds_ = extents_;
+        offsets_.rows = offsets_.cols = 0;
+
+        storage_ = create_storage(bounds_.rows * bounds_.cols);
+
+        for (size_type i = 0; i < rows(); ++i)
+            for (size_type j = 0; j < columns(); ++j)
+                ar & (*this)(i, j); 
+    }
 
   public:
     /// Constructs a new, empty matrix.
-    local_matrix_view()
+    local_matrix_view(
+        allocator_type const& alloc = allocator_type()
+        )
       : bounds_(0, 0)
       , extents_(0, 0)
       , offsets_(0, 0)
+      , alloc_(alloc)
     {}
 
 #if defined(HPX_HAVE_CXX11_STD_INITIALIZER_LIST)
     /// Constructs a new matrix initialized from the matrix \a m.
     local_matrix_view(
-        std::initializer_list<std::vector<value_type> > m
+        std::initializer_list<std::vector<value_type> > const& m
+      , matrix_offsets offsets = matrix_offsets(0, 0)
+      , allocator_type const& alloc = allocator_type()
         )
       : bounds_(0, 0)
       , extents_(0, 0)
       , offsets_(0, 0)
+      , alloc_(alloc)
     {
         if (0 != m.size() && !(*m.begin()).empty())
-       {
+        {
             bounds_.rows = extents_.rows = m.size();
             bounds_.cols = extents_.cols = (*m.begin()).size();
 
-            storage_.reset(
-                new std::vector<value_type>(bounds_.rows * bounds_.cols));
+            storage_ = create_storage(bounds_.rows * bounds_.cols);
 
             typedef typename std::initializer_list<
                 std::vector<value_type>
@@ -91,23 +174,28 @@ struct local_matrix_view
                 for (size_type j = 0; j < bounds_.cols; ++j)
                     (*this)(i, j) = (*it)[j]; 
             }
+
+            offsets_ = offsets;
         }
     }
 
     /// Constructs a new vector (n x 1 matrix) initialized from the vector \a v.
     local_matrix_view(
-        std::initializer_list<value_type> v
+        std::initializer_list<value_type> const& v
+      , matrix_offsets offsets = matrix_offsets(0, 0)
+      , allocator_type const& alloc = allocator_type()
         )
       : bounds_(0, 0)
       , extents_(0, 0)
       , offsets_(0, 0)
+      , alloc_(alloc)
     {
         if (0 != v.size())
         {
             bounds_.rows = extents_.rows = v.size();
             bounds_.cols = extents_.cols = 1;
 
-            storage_.reset(new std::vector<value_type>(bounds_.rows));
+            storage_ = create_storage(bounds_.rows);
 
             typedef typename std::initializer_list<
                 value_type
@@ -117,6 +205,8 @@ struct local_matrix_view
 
             for (size_type i = 0; i < bounds_.rows; ++i, ++it)
                 (*this)(i) = *it; 
+
+            offsets_ = offsets;
         }
     }
 #endif
@@ -126,14 +216,17 @@ struct local_matrix_view
     local_matrix_view(
         size_type rows
       , size_type cols = 1
-      , value_type init = value_type()
+      , const_reference init = value_type()
+      , matrix_offsets offsets = matrix_offsets(0, 0)
+      , allocator_type const& alloc = allocator_type()
         )
       : bounds_(rows, cols)
       , extents_(rows, cols)
-      , offsets_(0, 0)
+      , offsets_(offsets)
+      , alloc_(alloc)
     {
         if (rows && cols)
-            storage_.reset(new std::vector<value_type>(rows * cols, init));
+            storage_ = create_storage(rows * cols, init);
     } 
 
     /// Construct a new view of the matrix pointed to by \a other.
@@ -144,18 +237,32 @@ struct local_matrix_view
       , bounds_(other.bounds_)
       , extents_(other.extents_)
       , offsets_(other.offsets_)
+      , alloc_(other.alloc_)  
     {}
 
     /// Construct a new view of the matrix pointed to by \a other.
     local_matrix_view(
         local_matrix_view const& other
-      , matrix_dimensions extents
-      , matrix_dimensions offsets = matrix_dimensions(0, 0) 
+      , matrix_bounds extents
+      , matrix_offsets offsets = matrix_offsets(0, 0) 
         )
       : storage_(other.storage_)
       , bounds_(other.bounds_)
       , extents_(extents)
       , offsets_(offsets)
+      , alloc_(other.alloc_)  
+    {}
+
+    /// Construct a new view of the matrix pointed to by \a other.
+    local_matrix_view(
+        local_matrix_view const& other
+      , matrix_offsets offsets 
+        )
+      : storage_(other.storage_)
+      , bounds_(other.bounds_)
+      , extents_(other.extents_)
+      , offsets_(offsets)
+      , alloc_(other.alloc_)  
     {}
 
     // REVIEW: Is this correctly implemented?
@@ -166,11 +273,13 @@ struct local_matrix_view
       , bounds_(boost::move(other.bounds_))
       , extents_(boost::move(other.extents_))
       , offsets_(boost::move(other.offsets_))
+      , alloc_(boost::move(other.alloc_)) 
     {
         other.storage_.reset();
-        other.bounds_ = matrix_dimensions(0, 0);
-        other.extents_ = matrix_dimensions(0, 0);
-        other.offsets_ = matrix_dimensions(0, 0);
+        other.bounds_ = matrix_bounds(0, 0);
+        other.extents_ = matrix_bounds(0, 0);
+        other.offsets_ = matrix_offsets(0, 0);
+        other.alloc_ = allocator_type();
     }
 
     local_matrix_view& operator=(
@@ -181,6 +290,7 @@ struct local_matrix_view
         extents_ = other.extents_;
         offsets_ = other.offsets_;
         storage_ = other.storage_;
+        alloc_ = other.alloc_;
 
         return *this;
     }
@@ -194,11 +304,13 @@ struct local_matrix_view
         bounds_ = boost::move(other.bounds_);
         extents_ = boost::move(other.extents_);
         offsets_ = boost::move(other.offsets_);
+        alloc_ = boost::move(other.alloc_);
 
         other.storage_.reset();
-        other.bounds_ = matrix_dimensions(0, 0);
-        other.extents_ = matrix_dimensions(0, 0);
-        other.offsets_ = matrix_dimensions(0, 0);
+        other.bounds_ = matrix_bounds(0, 0);
+        other.extents_ = matrix_bounds(0, 0);
+        other.offsets_ = matrix_offsets(0, 0);
+        other.alloc_ = allocator_type();
 
         return *this;
     }
@@ -208,7 +320,9 @@ struct local_matrix_view
       , size_type col
         )
     {
-        return (*storage_)[index_type::index(row, col, bounds_, offsets_)];
+        size_type const i
+            = indexing_policy_type::index(row, col, bounds_, offsets_);
+        return (*storage_)[i];
     }
 
     reference operator()(
@@ -216,7 +330,9 @@ struct local_matrix_view
         )
     {
         BOOST_ASSERT(1 == extents_.cols);
-        return (*storage_)[index_type::index(row, 0, bounds_, offsets_)];
+        size_type const i
+            = indexing_policy_type::index(row, 0, bounds_, offsets_);
+        return (*storage_)[i];
     }
 
     const_reference operator()(
@@ -224,7 +340,9 @@ struct local_matrix_view
       , size_type col
         ) const
     {
-        return (*storage_)[index_type::index(row, col, bounds_, offsets_)];
+        size_type const i
+            = indexing_policy_type::index(row, col, bounds_, offsets_);
+        return (*storage_)[i];
     }
 
     const_reference operator()(
@@ -232,7 +350,9 @@ struct local_matrix_view
         ) const
     {
         BOOST_ASSERT(1 == extents_.cols);
-        return (*storage_)[index_type::index(row, 0, bounds_, offsets_)];
+        size_type const i
+            = indexing_policy_type::index(row, 0, bounds_, offsets_);
+        return (*storage_)[i];
     }
 
     size_type rows() const
@@ -245,6 +365,11 @@ struct local_matrix_view
         return extents_.cols;
     }
 
+    size_type size() const
+    {
+        return extents_.cols * extents_.rows;
+    }
+
     bool empty() const
     {
         return !storage_;
@@ -252,22 +377,29 @@ struct local_matrix_view
 
     pointer data()
     {
-        return index_type::compute_pointer(storage_->data(), bounds_, offsets_);
+        return indexing_policy_type::compute_pointer
+            (storage_->data(), bounds_, offsets_);
     }
 
     const_pointer data() const
     {
-        return index_type::compute_pointer(storage_->data(), bounds_, offsets_);
+        return indexing_policy_type::compute_pointer
+            (storage_->data(), bounds_, offsets_);
+    }
+
+    size_type vector_stride() const
+    {
+        return indexing_policy_type::vector_stride(bounds_);
     }
 
     size_type leading_dimension() const
     {
-        return index_type::leading_dimension(bounds_);
+        return indexing_policy_type::leading_dimension(bounds_);
     }
 
     blas::index_order index_order() const
     {
-        return index_type::order();
+        return indexing_policy_type::order();
     }
 };
 

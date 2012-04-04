@@ -5,20 +5,14 @@
 //  file LICENSE_1_0.txt or copy at http://www.boost.org/LICENSE_1_0.txt)
 ////////////////////////////////////////////////////////////////////////////////
 
-#if !defined(HPXLA_6EFCC1B0_166B_4F8A_B9D1_B1CE987F9EEC)
-#define HPXLA_6EFCC1B0_166B_4F8A_B9D1_B1CE987F9EEC
+#include <hpx/util/lightweight_test.hpp>
 
-#include <cblas.h>
+#include <hpxla/local_blas.hpp>
 
-namespace hpxla { namespace blas
+using hpx::util::report_errors;
+
+int main()
 {
-
-typedef ::CBLAS_ORDER index_order;
-
-#define HPXLA_ROW_MAJOR_ORDER    ::CblasRowMajor
-#define HPXLA_COLUMN_MAJOR_ORDER ::CblasColMajor
-
-}}
-
-#endif // HPXLA_6EFCC1B0_166B_4F8A_B9D1_B1CE987F9EEC
+    return report_errors();
+}
 

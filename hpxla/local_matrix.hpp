@@ -13,16 +13,14 @@
 namespace hpxla
 {
 
-// TODO: Allocator support.
 // TODO: Container compatible.
-// TODO: LDA/stride stuff.
 template <
     typename T
-  , typename Index 
+  , typename Policy 
 >
 struct local_matrix
 {
-    typedef local_matrix_view<T, Index> view_type;
+    typedef local_matrix_view<T, Policy> view_type;
 
     typedef typename view_type::value_type value_type;
     typedef typename view_type::reference reference;
@@ -31,36 +29,63 @@ struct local_matrix
     typedef typename view_type::const_pointer const_pointer;
     typedef typename view_type::size_type size_type;
 
-    typedef typename view_type::index_type index_type;
+    typedef typename view_type::policy_type policy_type;
+    typedef typename view_type::indexing_policy_type indexing_policy_type;
+    typedef typename view_type::allocation_policy_type allocation_policy_type;
+
+    typedef typename view_type::allocator_type allocator_type;
 
   private:
     BOOST_COPYABLE_AND_MOVABLE(local_matrix);
 
     view_type view_;
 
+    friend class boost::serialization::access;
+
+    template <
+        typename Archive
+    >
+    void serialize(
+        Archive& ar
+      , unsigned version
+        ) 
+    {
+        ar & view_; 
+    }
+
   public:
-    local_matrix() {}
+    local_matrix(
+        allocator_type const& alloc = allocator_type()
+        )
+      : view_(alloc)
+    {}
 
 #if defined(HPX_HAVE_CXX11_STD_INITIALIZER_LIST)
     local_matrix(
-        std::initializer_list<std::vector<value_type> > m
+        std::initializer_list<std::vector<value_type> > const& m
+      , matrix_offsets offsets = matrix_offsets(0, 0)
+      , allocator_type const& alloc = allocator_type()
         )
-      : view_(m) 
+      : view_(m, offsets, alloc) 
     {}
 
     local_matrix(
-        std::initializer_list<value_type> v
+        std::initializer_list<value_type> const& v
+      , matrix_offsets offsets = matrix_offsets(0, 0)
+      , allocator_type const& alloc = allocator_type()
         )
-      : view_(v) 
+      : view_(v, offsets, alloc) 
     {}
 #endif
 
     local_matrix(
         size_type rows
       , size_type cols = 1
-      , value_type init = value_type()
+      , const_reference init = value_type()
+      , matrix_offsets offsets = matrix_offsets(0, 0)
+      , allocator_type const& alloc = allocator_type()
         )
-      : view_(rows, cols, init) 
+      : view_(rows, cols, init, offsets, alloc) 
     {} 
 
     local_matrix(
@@ -70,13 +95,50 @@ struct local_matrix
         view_.bounds_ = other.view_.bounds_;
         view_.extents_ = other.view_.extents_;
         view_.offsets_ = other.view_.offsets_;
+        view_.alloc_ = other.view_.alloc_;
 
         if (  other.view_.bounds_.rows
            && other.view_.bounds_.cols
            && other.view_.storage_)
         {
-            view_.storage_.reset(
-                new std::vector<value_type>(*other.view_.storage_));
+            view_.storage_ = view_.create_storage(*other.view_.storage_);
+        }
+    }
+
+    local_matrix(
+        local_matrix const& other
+      , matrix_bounds extents
+      , matrix_offsets offsets = matrix_offsets(0, 0) 
+        )
+    {
+        view_.bounds_ = other.view_.bounds_;
+        view_.extents_ = extents;
+        view_.offsets_ = offsets; 
+        view_.alloc_ = other.view_.alloc_;
+
+        if (  other.view_.bounds_.rows
+           && other.view_.bounds_.cols
+           && other.view_.storage_)
+        {
+            view_.storage_ = view_.create_storage(*other.view_.storage_);
+        }
+    }
+
+    local_matrix(
+        local_matrix const& other
+      , matrix_offsets offsets
+        )
+    {
+        view_.bounds_ = other.view_.bounds_;
+        view_.extents_ = other.view_.extents_;
+        view_.offsets_ = offsets; 
+        view_.alloc_ = other.view_.alloc_;
+
+        if (  other.view_.bounds_.rows
+           && other.view_.bounds_.cols
+           && other.view_.storage_)
+        {
+            view_.storage_ = view_.create_storage(*other.view_.storage_);
         }
     }
 
@@ -94,13 +156,13 @@ struct local_matrix
         view_.bounds_ = other.view_.bounds_;
         view_.extents_ = other.view_.extents_;
         view_.offsets_ = other.view_.offsets_;
+        view_.alloc_ = other.view_.alloc_;
 
         if (  other.view_.bounds_.rows
            && other.view_.bounds_.cols
            && other.view_.storage_)
         {
-            view_.storage_.reset(
-                new std::vector<value_type>(*other.view_.storage_));
+            view_.storage_ = view_.create_storage(*other.view_.storage_);
         }
 
         else
@@ -159,6 +221,11 @@ struct local_matrix
         return view_.columns();
     }
 
+    size_type size() const
+    {
+        return view_.size();
+    }
+
     bool empty() const
     {
         return view_.empty();
@@ -172,6 +239,11 @@ struct local_matrix
     const_pointer data() const
     {
         return view_.data();
+    }
+
+    size_type vector_stride() const
+    {
+        return view_.vector_stride();
     }
 
     size_type leading_dimension() const

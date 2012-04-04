@@ -8,4 +8,5 @@
 *****************
 
 * Switchable assertions/exceptions
-
+* Add Policy template parameter to matrix classes.
+* Convert local BLAS functions to accept matrix classes with arbitrary policies. 

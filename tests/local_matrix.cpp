@@ -13,6 +13,15 @@
 // The order() and leading_dimension() methods are tested in the local BLAS
 // tests.
 
+using hpxla::local_matrix;
+using hpxla::local_matrix_policy;
+using hpxla::matrix_bounds;
+
+using hpxla::policy::column_major_indexing;
+using hpxla::policy::row_major_indexing;
+
+using hpx::util::report_errors;
+
 template <
     typename Matrix
 >
@@ -408,7 +417,7 @@ void test()
 
     { // {{{ Raw access and indexing.
         typedef typename Matrix::pointer pointer;
-        typedef typename Matrix::index_type indexer;
+        typedef typename Matrix::indexing_policy_type indexer;
 
         Matrix m0{ { 1, 2, 3 }
                  , { 4, 5, 6 } };
@@ -425,7 +434,7 @@ void test()
         HPX_SANITY_EQ(m0(1, 1), 5);
         HPX_SANITY_EQ(m0(1, 2), 6);
 
-        hpxla::matrix_dimensions bounds(2, 3);
+        matrix_bounds bounds(2, 3);
 
         pointer p0 = m0.data();
 
@@ -445,11 +454,43 @@ void test()
 
 int main()
 {
-    test<hpxla::local_matrix<double, hpxla::column_major_index> >();
-    test<hpxla::local_matrix<double, hpxla::row_major_index> >();
-    test<hpxla::local_matrix<float, hpxla::column_major_index> >();
-    test<hpxla::local_matrix<float, hpxla::row_major_index> >();
+    ///////////////////////////////////////////////////////////////////////////
+    test<
+        local_matrix<
+            float
+          , local_matrix_policy<
+                column_major_indexing
+            >
+        >
+    >();
 
-    return hpx::util::report_errors();
+    test<
+        local_matrix<
+            float
+          , local_matrix_policy<
+                row_major_indexing
+            >
+        >
+    >();
+
+    test<
+        local_matrix<
+            double
+          , local_matrix_policy<
+                column_major_indexing
+            >
+        >
+    >();
+
+    test<
+        local_matrix<
+            double
+          , local_matrix_policy<
+                row_major_indexing
+            >
+        >
+    >();
+
+    return report_errors();
 }
 
