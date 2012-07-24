@@ -58,14 +58,14 @@ HPX_REGISTER_MINIMAL_COMPONENT_FACTORY(
 HPX_REGISTER_MINIMAL_COMPONENT_FACTORY(
     cdr_distributed_submatrix_type, cdr_distributed_submatrix);
 
-HPX_DEFINE_GET_COMPONENT_TYPE(rfc_distributed_submatrix_type::wrapped_type);
-HPX_DEFINE_GET_COMPONENT_TYPE(rfr_distributed_submatrix_type::wrapped_type);
-HPX_DEFINE_GET_COMPONENT_TYPE(rdc_distributed_submatrix_type::wrapped_type);
-HPX_DEFINE_GET_COMPONENT_TYPE(rdr_distributed_submatrix_type::wrapped_type);
-HPX_DEFINE_GET_COMPONENT_TYPE(cfc_distributed_submatrix_type::wrapped_type);
-HPX_DEFINE_GET_COMPONENT_TYPE(cfr_distributed_submatrix_type::wrapped_type);
-HPX_DEFINE_GET_COMPONENT_TYPE(cdc_distributed_submatrix_type::wrapped_type);
-HPX_DEFINE_GET_COMPONENT_TYPE(cdr_distributed_submatrix_type::wrapped_type);
+//HPX_DEFINE_GET_COMPONENT_TYPE(rfc_distributed_submatrix_type::wrapped_type);
+//HPX_DEFINE_GET_COMPONENT_TYPE(rfr_distributed_submatrix_type::wrapped_type);
+//HPX_DEFINE_GET_COMPONENT_TYPE(rdc_distributed_submatrix_type::wrapped_type);
+//HPX_DEFINE_GET_COMPONENT_TYPE(rdr_distributed_submatrix_type::wrapped_type);
+//HPX_DEFINE_GET_COMPONENT_TYPE(cfc_distributed_submatrix_type::wrapped_type);
+//HPX_DEFINE_GET_COMPONENT_TYPE(cfr_distributed_submatrix_type::wrapped_type);
+//HPX_DEFINE_GET_COMPONENT_TYPE(cdc_distributed_submatrix_type::wrapped_type);
+//HPX_DEFINE_GET_COMPONENT_TYPE(cdr_distributed_submatrix_type::wrapped_type);
 
 HPX_REGISTER_ACTION_EX(
     hpxla::server::rfc_distributed_submatrix::initialize_from_dimensions_action
