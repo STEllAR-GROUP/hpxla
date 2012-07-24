@@ -8,7 +8,7 @@
 #if !defined(HPXLA_F1C9159C_DE88_4AAB_A4F2_5F186B3C6B84)
 #define HPXLA_F1C9159C_DE88_4AAB_A4F2_5F186B3C6B84
 
-#include <hpxla/policies.hpp>
+#include <hpxla/policies_fwd.hpp>
 
 namespace hpxla
 {

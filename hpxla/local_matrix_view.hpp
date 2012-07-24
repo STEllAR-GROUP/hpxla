@@ -9,6 +9,8 @@
 #define HPXLA_D0543949_3C98_4187_93A7_63F5C5B31EDE
 
 #include <hpxla/local_fwd.hpp>
+#include <hpxla/matrix_dimensions.hpp>
+#include <hpxla/local_blas/blas_enums.hpp>
 
 #include <vector>
 #include <initializer_list>

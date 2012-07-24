@@ -269,5 +269,7 @@ struct local_matrix
 
 }
 
+#include <hpxla/policies.hpp>
+
 #endif // HPXLA_DD44992F_CF37_4D24_BF44_3963793AEA5D
 
