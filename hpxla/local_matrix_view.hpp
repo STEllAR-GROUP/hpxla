@@ -38,11 +38,11 @@ struct local_matrix_view
     >
     friend struct local_matrix;
 
-    typedef T value_type;
-    typedef T& reference;
-    typedef T const& const_reference;
-    typedef T* pointer;
-    typedef T const* const_pointer;
+    typedef typename std::vector<T>::value_type value_type;
+    typedef typename std::vector<T>::reference reference;
+    typedef typename std::vector<T>::const_reference const_reference;
+    typedef typename std::vector<T>::pointer pointer;
+    typedef typename std::vector<T>::const_pointer const_pointer;
     typedef boost::uint64_t size_type;
 
     typedef Policy policy_type;
