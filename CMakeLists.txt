@@ -50,6 +50,16 @@ set(CMAKE_MODULE_PATH ${HPX_ROOT}/share/cmake-2.8/Modules)
 
 find_package(HPX)
 
+foreach(dir ${HPX_INCLUDE_DIR})
+  include_directories(${dir})
+endforeach()
+
+foreach(dir ${HPX_LIBRARY_DIR})
+  link_directories(${dir})
+endforeach()
+
+set(CMAKE_BUILD_TYPE ${HPX_BUILD_TYPE} CACHE STRING "Build type." FORCE)
+
 ################################################################################
 find_package(HPX_BLAS)
 include_directories(${BLAS_INCLUDE_DIR})
@@ -63,6 +73,10 @@ hpx_check_for_cxx11_std_initializer_list(HPX_CXX11_STD_INITIALIZER_LIST
 ################################################################################
 add_hpx_pseudo_target(tests)
 add_subdirectory(tests)
+
+################################################################################
+add_hpx_pseudo_target(applications)
+add_subdirectory(applications)
 
 ################################################################################
 add_subdirectory(src)
