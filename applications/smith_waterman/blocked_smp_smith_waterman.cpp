@@ -3,13 +3,13 @@
 //  Distributed under the Boost Software License, Version 1.0. (See accompanying
 //  file LICENSE_1_0.txt or copy at http://www.boost.org/LICENSE_1_0.txt)
 
-#include <boost/spirit/include/qi.hpp>
-
 #include <hpx/hpx_init.hpp>
 #include <hpx/util/high_resolution_timer.hpp>
 
 #include <hpxla/local_matrix.hpp>
 
+#include <boost/format.hpp>
+#include <boost/spirit/include/qi.hpp>
 #include <boost/atomic.hpp>
 #include <boost/random/mersenne_twister.hpp>
 #include <boost/random/uniform_int_distribution.hpp>
@@ -63,7 +63,7 @@ std::ostream& operator<<(std::ostream& out, coords const& c)
 ///////////////////////////////////////////////////////////////////////////////
 struct alignment
 { 
-    hpxla::local_matrix<hpx::future<boost::int64_t> > H;
+    hpxla::local_matrix<boost::int64_t> H;
     std::vector<coords> backpath;
 };
 
@@ -84,54 +84,99 @@ struct winner
 
 boost::atomic<winner> H_best(winner(0, 0, 0));
 
-boost::int64_t generate_scoring_cell(
+boost::int64_t calc_cell(
     boost::uint32_t i
   , boost::uint32_t j
   , char ai
   , char bj
-  , hpx::future<boost::int64_t> const& left      // H(i, j-1)
-  , hpx::future<boost::int64_t> const& diagonal  // H(i-1, j-1)
-  , hpx::future<boost::int64_t> const& up        // H(i-1, j) 
+  , boost::int64_t left      // H(i, j-1)
+  , boost::int64_t diagonal  // H(i-1, j-1)
+  , boost::int64_t up        // H(i-1, j) 
     )
 {
     boost::int64_t match_mismatch = 0;
     if (ai == bj)
     {
-        match_mismatch = diagonal.get() + match;
+        match_mismatch = diagonal + match;
     } 
     else 
     {
-        match_mismatch = diagonal.get() + mismatch;
+        match_mismatch = diagonal + mismatch;
     }
-    boost::int64_t deletion = up.get() + gap;
-    boost::int64_t insertion = left.get() + gap;        
+    boost::int64_t deletion = up + gap;
+    boost::int64_t insertion = left + gap;        
     
     boost::int64_t ij_value
-        = maximum(int64_t(0), match_mismatch, deletion, insertion);
+        = maximum(boost::int64_t(0), match_mismatch, deletion, insertion);
+
+    return ij_value;
+}
+
+void calc_block(
+    hpxla::local_matrix_view<boost::int64_t>& H 
+  , hpxla::local_matrix_view<hpx::future<void> >& C // Control matrix.
+  , coords start   // The start of our cell block. 
+  , coords end     // The end of our cell block.
+  , coords control // Our location in the control matrix.
+  , std::string const& a
+  , std::string const& b
+    )
+{
+    // TODO: Handle this with hpx::wait_all?
+    C(control.i,   control.j-1).get(); 
+    C(control.i-1, control.j-1).get(); 
+    C(control.i-1, control.j  ).get(); 
+
+    winner local_best = H_best.load();
+
+    // Generate scores.
+    for (boost::uint32_t i = start.i; i < end.i; ++i)
+    {
+        for (boost::uint32_t j = start.j; j < end.j; ++j)
+        {
+            H(i, j) = calc_cell(i, j, a[i-1], b[j-1]
+              , H(i,   j-1) // left
+              , H(i-1, j-1) // diagonal 
+              , H(i-1, j  ) // up
+            ); 
+
+            if (H(i, j) > local_best.value)
+            {
+                local_best.value = H(i, j);
+                local_best.i = i;
+                local_best.j = j;
+            } 
+        }
+    }
 
     winner H_best_old = H_best.load(); 
 
     while (true)
     {
-        winner H_best_new(ij_value, i, j);
-
-        if (H_best_new.value > H_best_old.value)
+        if (local_best.value > H_best_old.value)
         {
-            if (H_best.compare_exchange_weak(H_best_old, H_best_new))
+            if (H_best.compare_exchange_weak(H_best_old, local_best))
                 break;
         }
         else
             break;
     }
-
-    return ij_value;
 }
 
 ///////////////////////////////////////////////////////////////////////////////
-alignment smith_waterman(std::string const& a, std::string const& b)
+alignment smith_waterman(
+    std::string const& a
+  , std::string const& b
+  , boost::uint32_t grain_size
+    )
 {
     // Make sure that a and b have the same size (e.g. m == n), for now.
     BOOST_ASSERT(a.size() == b.size());
+
+    if (a.size() % grain_size)
+        throw std::invalid_argument(boost::str(boost::format(
+            "grain size of %1% is invalid for a sequence of length %2%")
+            % grain_size % a.size()));
 
     // j is the length of our input sequences plus one. This is number of
     // rows and columns in our square matrix. The extra, zero-filled row is
@@ -142,35 +187,45 @@ alignment smith_waterman(std::string const& a, std::string const& b)
     alignment result;
 
     // k * k matrix
-    result.H = hpxla::local_matrix<hpx::future<boost::int64_t> >(k, k); 
+    result.H = hpxla::local_matrix<boost::int64_t>(k, k, 0); 
 
     // Declare a matrix view (e.g. an "alias") called H which refers to
     // result.H.
-    hpxla::local_matrix_view<hpx::future<boost::int64_t> > H = result.H.view();
+    hpxla::local_matrix_view<boost::int64_t> H = result.H.view();
 
-    for (boost::uint32_t x = 0; x < k; ++x)
+    // Control matrix, for synchronizing the blocked, parallel operations.
+    boost::uint32_t g = (grain_size % a.size()) + 1;
+    hpxla::local_matrix<hpx::future<void> > control_matrix(g, g); 
+
+    hpxla::local_matrix_view<hpx::future<void> > C = control_matrix.view();
+
+    for (boost::uint32_t x = 0; x < g; ++x)
     {
-        H(0, x) = hpx::lcos::create_value<boost::int64_t>(0);
-        H(x, 0) = hpx::lcos::create_value<boost::int64_t>(0);
+        C(0, x) = hpx::lcos::create_void();
+        C(x, 0) = hpx::lcos::create_void();
     }
 
     ///////////////////////////////////////////////////////////////////////////
     // Generate scoring matrix.
 
-    for (boost::uint32_t i = 1; i < k; ++i)
+    for (boost::uint32_t i = 1; i < g; ++i)
     {
-        for (boost::uint32_t j = 1; j < k; ++j)
+        for (boost::uint32_t j = 1; j < g; ++j)
         {
-            H(i, j) = hpx::async(&generate_scoring_cell, i, j, a[i-1], b[j-1]
-                               , H(i, j-1)   // left dependency
-                               , H(i-1, j-1) // diagonal dependency
-                               , H(i-1, j)); // top dependency
+            boost::uint32_t const step = a.size() / grain_size;
+
+            coords const start( ((i-1)*step)+1, ((j-1)*step)+1 ); 
+            coords const end(   ((i)*step)+1,   ((j)*step)+1   ); 
+
+            coords const control(i, j);
+
+            C(i, j) = hpx::async(&calc_block, H, C, start, end, control, a, b);
         } 
     }  
 
-    for (boost::uint32_t i = 1; i < k; ++i)
-        for (boost::uint32_t j = 1; j < k; ++j)
-            H(i, j).get(); 
+    for (boost::uint32_t i = 1; i < g; ++i)
+        for (boost::uint32_t j = 1; j < g; ++j)
+            C(i, j).get(); 
 
     ///////////////////////////////////////////////////////////////////////////
     // Backtracking.
@@ -193,9 +248,9 @@ alignment smith_waterman(std::string const& a, std::string const& b)
     while (true)
     {
         coords last = backpath.back();
-        boost::int64_t match_mismatch = H(last.i-1, last.j-1).get(); 
-        boost::int64_t insertion = H(last.i, last.j-1).get();
-        boost::int64_t deletion = H(last.i-1, last.j).get();
+        boost::int64_t match_mismatch = H(last.i-1, last.j-1); 
+        boost::int64_t insertion = H(last.i, last.j-1);
+        boost::int64_t deletion = H(last.i-1, last.j);
     
         boost::int64_t m = maximum(match_mismatch, insertion, deletion);    
     
@@ -222,6 +277,7 @@ alignment smith_waterman(std::string const& a, std::string const& b)
 void benchmark_sw(
     boost::random::mt19937& rng
   , boost::uint32_t length
+  , boost::uint32_t grain_size
   , boost::uint32_t iterations = 1 << 10
     )
 { 
@@ -245,25 +301,30 @@ void benchmark_sw(
     hpx::util::high_resolution_timer t;
 
     for (boost::uint32_t x = 0; x < iterations; ++x)
-        smith_waterman(a, b);
+        smith_waterman(a, b, grain_size);
 
     double runtime = t.elapsed();
 
-    std::cout << length << "," << iterations << "," << runtime << "\n";
+    std::cout << length << ","
+              << grain_size << ","
+              << iterations << ","
+              << runtime << "\n";
 }
 
 std::string const nocolor = "\E[0m";
 std::string const yellow  = "\E[1;33m";
 
 void validate_sw(
-    std::string const& a = "AGCACACA"
+    boost::uint32_t grain_size = 1
+  , std::string const& a = "AGCACACA"
   , std::string const& b = "ACACACTA"
     )
 {
     std::cout << "A: " << a << "\n"
-              << "B: " << b << "\n\n";
+              << "B: " << b << "\n\n"
+              << "grain-size: " << grain_size << "\n\n";
 
-    alignment align = smith_waterman(a, b);
+    alignment align = smith_waterman(a, b, grain_size);
 
     boost::uint32_t p = a.size() + 1;
 
@@ -282,9 +343,9 @@ void validate_sw(
             // Check if the current element align.H(i, j) is part of the optimal
             // alignment.
             if (H_path(i, j))
-                std::cout << "\t" << yellow << align.H(i, j).get() << nocolor;
+                std::cout << "\t" << yellow << align.H(i, j) << nocolor;
             else
-                std::cout << "\t" <<           align.H(i, j).get()           ;
+                std::cout << "\t" <<           align.H(i, j)           ;
         }
 
         std::cout << "\n";
@@ -294,7 +355,7 @@ void validate_sw(
 }
 
 template <typename Iterator>
-bool parse_list(Iterator first, Iterator last, std::vector<boost::uint32_t>& v)
+bool read_list(Iterator first, Iterator last, std::vector<boost::uint32_t>& v)
 {
     using boost::spirit::qi::uint_parser;
     using boost::spirit::qi::phrase_parse;
@@ -329,25 +390,38 @@ int hpx_main(boost::program_options::variables_map& vm)
 
     std::vector<boost::uint32_t> lengths;
 
-    if (!parse_list(raw_lengths.begin(), raw_lengths.end(), lengths))
-        throw std::invalid_argument("--lengths argument could not be parsed\n");
+    if (!read_list(raw_lengths.begin(), raw_lengths.end(), lengths))
+        throw std::invalid_argument("--lengths argument not be parsed\n");
+
+    // Parse grain sizes.
+    std::string raw_grain_sizes = vm["grain-sizes"].as<std::string>();
+
+    std::vector<boost::uint32_t> grain_sizes;
+
+    if (!read_list(raw_grain_sizes.begin(), raw_grain_sizes.end(), grain_sizes))
+        throw std::invalid_argument("--grain-sizes could not be parsed\n");
 
     boost::random::mt19937 rng(seed);
 
     {
         ///////////////////////////////////////////////////////////////////////
         // Validate implementation. 
-        validate_sw();
-    
+        if (vm.count("validate"))
+        {
+            validate_sw(1);
+            validate_sw(2);
+        }
+
         ///////////////////////////////////////////////////////////////////////
         // Benchmark implementation. 
     
         // Print out header rows.
-        std::cout << "HPX Naive SMP Smith-Waterman Performance\n"
-                  << "Sequence Length,Iterations,Total Walltime (s)\n";
+        std::cout
+            << "HPX SMP Smith-Waterman Performance\n"
+            << "Sequence Length,Grain Size,Iterations,Total Walltime (s)\n";
     
         for (boost::uint32_t x = 0; x < lengths.size(); ++x)
-            benchmark_sw(rng, lengths[x], iterations);
+            benchmark_sw(rng, lengths[x], grain_sizes[x], iterations);
     }
 
     return hpx::finalize();
@@ -366,6 +440,14 @@ int main(int argc, char** argv)
         , value<std::string>()->default_value("32,64,128,256")
         , "sequence lengths to use (comma seperated list, maximum length "
           " currently allowed is 2^32)")
+
+        ( "grain-sizes"
+        , value<std::string>()->default_value("4,4,4,4")
+        , "grain sizes to use (comma seperated list, must have the same "
+          " number of elements as --lengths)")
+
+        ( "validate"
+        , "run validation code before performing benchmarks")
        
         ( "iterations"
         , value<boost::uint32_t>()->default_value(1024)
