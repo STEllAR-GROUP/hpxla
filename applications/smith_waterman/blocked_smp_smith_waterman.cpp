@@ -276,6 +276,7 @@ alignment smith_waterman(
 
 void benchmark_sw(
     boost::random::mt19937& rng
+  , boost::uint32_t seed 
   , boost::uint32_t length
   , boost::uint32_t grain_size
   , boost::uint32_t iterations = 1 << 10
@@ -305,7 +306,9 @@ void benchmark_sw(
 
     double runtime = t.elapsed();
 
-    std::cout << length << ","
+    std::cout << seed << ","
+              << hpx::get_os_thread_count() << "," 
+              << length << ","
               << grain_size << ","
               << iterations << ","
               << runtime << "\n";
@@ -321,7 +324,7 @@ void validate_sw(
     )
 {
     std::cout << "A: " << a << "\n"
-              << "B: " << b << "\n\n"
+              << "B: " << b << "\n"
               << "grain-size: " << grain_size << "\n\n";
 
     alignment align = smith_waterman(a, b, grain_size);
@@ -416,12 +419,14 @@ int hpx_main(boost::program_options::variables_map& vm)
         // Benchmark implementation. 
     
         // Print out header rows.
-        std::cout
-            << "HPX SMP Smith-Waterman Performance\n"
-            << "Sequence Length,Grain Size,Iterations,Total Walltime (s)\n";
+        if (!vm.count("no-header"))
+            std::cout
+                << "HPX Blocked SMP Smith-Waterman Performance\n"
+                << "Seed,OS-Threads,Sequence Length,Grain Size,Iterations,"
+                   "Total Walltime (s)\n";
     
         for (boost::uint32_t x = 0; x < lengths.size(); ++x)
-            benchmark_sw(rng, lengths[x], grain_sizes[x], iterations);
+            benchmark_sw(rng, seed, lengths[x], grain_sizes[x], iterations);
     }
 
     return hpx::finalize();
@@ -448,6 +453,9 @@ int main(int argc, char** argv)
 
         ( "validate"
         , "run validation code before performing benchmarks")
+
+        ( "no-header"
+        , "do not print out the CSV header for the benchmark data")
        
         ( "iterations"
         , value<boost::uint32_t>()->default_value(1024)

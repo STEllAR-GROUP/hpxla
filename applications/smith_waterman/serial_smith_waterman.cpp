@@ -174,6 +174,7 @@ alignment smith_waterman(std::string const& a, std::string const& b)
 
 void benchmark_sw(
     boost::random::mt19937& rng
+  , std::size_t seed
   , std::size_t length
   , std::size_t iterations = 1 << 10
     )
@@ -201,7 +202,12 @@ void benchmark_sw(
 
     double runtime = t.elapsed();
 
-    std::cout << length << "," << iterations << "," << runtime << "\n";
+    std::cout << seed << ","
+              << "1," 
+              << length << ","
+              << "1,"
+              << iterations << ","
+              << runtime << "\n";
 }
 
 std::string const nocolor = "\E[0m";
@@ -246,7 +252,7 @@ void validate_sw(
 }
 
 template <typename Iterator>
-bool parse_list(Iterator first, Iterator last, std::vector<std::size_t>& v)
+bool read_list(Iterator first, Iterator last, std::vector<std::size_t>& v)
 {
     using boost::spirit::qi::uint_parser;
     using boost::spirit::qi::phrase_parse;
@@ -281,7 +287,7 @@ int app_main(boost::program_options::variables_map& vm)
 
     std::vector<std::size_t> lengths;
 
-    if (!parse_list(raw_lengths.begin(), raw_lengths.end(), lengths))
+    if (!read_list(raw_lengths.begin(), raw_lengths.end(), lengths))
         throw std::invalid_argument("--lengths argument could not be parsed\n");
 
     boost::random::mt19937 rng(seed);
@@ -297,11 +303,14 @@ int app_main(boost::program_options::variables_map& vm)
     // Benchmark implementation. 
 
     // Print out header rows.
-    std::cout << "HPX Serial Smith-Waterman Performance\n"
-              << "Sequence Length,Iterations,Total Walltime (s)\n";
+    if (!vm.count("no-header"))
+        std::cout
+            << "HPX Naive SMP Smith-Waterman Performance\n"
+            << "Seed,OS-Threads,Sequence Length,Grain Size,Iterations,"
+               "Total Walltime (s)\n";
 
     for (std::size_t x = 0; x < lengths.size(); ++x)
-        benchmark_sw(rng, lengths[x], iterations);
+        benchmark_sw(rng, seed, lengths[x], iterations);
 
     return 0;
 }
@@ -326,6 +335,9 @@ int main(int argc, char** argv)
 
         ( "validate"
         , "run validation code before performing benchmarks")
+
+        ( "no-header"
+        , "do not print out the CSV header for the benchmark data")
        
         ( "iterations"
         , value<std::size_t>()->default_value(1024)

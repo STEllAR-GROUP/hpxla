@@ -83,7 +83,7 @@ struct winner
 
 boost::atomic<winner> H_best(winner(0, 0, 0));
 
-boost::int64_t generate_scoring_cell(
+boost::int64_t calc_cell(
     boost::uint32_t i
   , boost::uint32_t j
   , char ai
@@ -160,7 +160,7 @@ alignment smith_waterman(std::string const& a, std::string const& b)
     {
         for (boost::uint32_t j = 1; j < k; ++j)
         {
-            H(i, j) = hpx::async(&generate_scoring_cell, i, j, a[i-1], b[j-1]
+            H(i, j) = hpx::async(&calc_cell, i, j, a[i-1], b[j-1]
                                , H(i, j-1)   // left dependency
                                , H(i-1, j-1) // diagonal dependency
                                , H(i-1, j)); // top dependency
@@ -220,6 +220,7 @@ alignment smith_waterman(std::string const& a, std::string const& b)
 
 void benchmark_sw(
     boost::random::mt19937& rng
+  , boost::uint32_t seed 
   , boost::uint32_t length
   , boost::uint32_t iterations = 1 << 10
     )
@@ -248,7 +249,12 @@ void benchmark_sw(
 
     double runtime = t.elapsed();
 
-    std::cout << length << "," << iterations << "," << runtime << "\n";
+    std::cout << seed << ","
+              << hpx::get_os_thread_count() << "," 
+              << length << ","
+              << "1,"
+              << iterations << ","
+              << runtime << "\n";
 }
 
 std::string const nocolor = "\E[0m";
@@ -293,7 +299,7 @@ void validate_sw(
 }
 
 template <typename Iterator>
-bool parse_list(Iterator first, Iterator last, std::vector<boost::uint32_t>& v)
+bool read_list(Iterator first, Iterator last, std::vector<boost::uint32_t>& v)
 {
     using boost::spirit::qi::uint_parser;
     using boost::spirit::qi::phrase_parse;
@@ -328,7 +334,7 @@ int hpx_main(boost::program_options::variables_map& vm)
 
     std::vector<boost::uint32_t> lengths;
 
-    if (!parse_list(raw_lengths.begin(), raw_lengths.end(), lengths))
+    if (!read_list(raw_lengths.begin(), raw_lengths.end(), lengths))
         throw std::invalid_argument("--lengths argument could not be parsed\n");
 
     boost::random::mt19937 rng(seed);
@@ -345,11 +351,14 @@ int hpx_main(boost::program_options::variables_map& vm)
         // Benchmark implementation. 
     
         // Print out header rows.
-        std::cout << "HPX Naive SMP Smith-Waterman Performance\n"
-                  << "Sequence Length,Iterations,Total Walltime (s)\n";
+        if (!vm.count("no-header"))
+            std::cout
+                << "HPX Naive SMP Smith-Waterman Performance\n"
+                << "Seed,OS-Threads,Sequence Length,Grain Size,Iterations,"
+                   "Total Walltime (s)\n";
     
         for (boost::uint32_t x = 0; x < lengths.size(); ++x)
-            benchmark_sw(rng, lengths[x], iterations);
+            benchmark_sw(rng, seed, lengths[x], iterations);
     }
 
     return hpx::finalize();
@@ -371,6 +380,9 @@ int main(int argc, char** argv)
 
         ( "validate"
         , "run validation code before performing benchmarks")
+
+        ( "no-header"
+        , "do not print out the CSV header for the benchmark data")
        
         ( "iterations"
         , value<boost::uint32_t>()->default_value(1024)
