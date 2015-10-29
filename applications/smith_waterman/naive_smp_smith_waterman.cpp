@@ -5,13 +5,16 @@
 
 #include <hpx/hpx_init.hpp>
 #include <hpx/util/high_resolution_timer.hpp>
+#include <hpx/include/async.hpp>
 
 #include <hpxla/local_matrix.hpp>
+#include <hpxla/local_matrix_view.hpp>
 
 #include <boost/spirit/include/qi.hpp>
 #include <boost/atomic.hpp>
 #include <boost/random/mersenne_twister.hpp>
 #include <boost/random/uniform_int_distribution.hpp>
+#include <boost/ref.hpp>
 
 ///////////////////////////////////////////////////////////////////////////////
 // Utility stuff written by Bryce. Instructions for Stephie:
@@ -62,7 +65,7 @@ std::ostream& operator<<(std::ostream& out, coords const& c)
 ///////////////////////////////////////////////////////////////////////////////
 struct alignment
 { 
-    hpxla::local_matrix<hpx::future<boost::int64_t> > H;
+    hpxla::local_matrix<hpx::shared_future<boost::int64_t> > H;
     std::vector<coords> backpath;
 };
 
@@ -88,9 +91,9 @@ boost::int64_t calc_cell(
   , boost::uint32_t j
   , char ai
   , char bj
-  , hpx::future<boost::int64_t> const& left      // H(i, j-1)
-  , hpx::future<boost::int64_t> const& diagonal  // H(i-1, j-1)
-  , hpx::future<boost::int64_t> const& up        // H(i-1, j) 
+  , hpx::shared_future<boost::int64_t> const &left      // H(i, j-1)
+  , hpx::shared_future<boost::int64_t> const &diagonal  // H(i-1, j-1)
+  , hpx::shared_future<boost::int64_t> const &up        // H(i-1, j) 
     )
 {
     boost::int64_t match_mismatch = 0;
@@ -141,16 +144,16 @@ alignment smith_waterman(std::string const& a, std::string const& b)
     alignment result;
 
     // k * k matrix
-    result.H = hpxla::local_matrix<hpx::future<boost::int64_t> >(k, k); 
+    result.H = hpxla::local_matrix<hpx::shared_future<boost::int64_t> >(k, k); 
 
     // Declare a matrix view (e.g. an "alias") called H which refers to
     // result.H.
-    hpxla::local_matrix_view<hpx::future<boost::int64_t> > H = result.H.view();
+    hpxla::local_matrix_view<hpx::shared_future<boost::int64_t> > H = result.H.view();
 
     for (boost::uint32_t x = 0; x < k; ++x)
     {
-        H(0, x) = hpx::lcos::create_value<boost::int64_t>(0);
-        H(x, 0) = hpx::lcos::create_value<boost::int64_t>(0);
+        H(0, x) = hpx::make_ready_future(boost::int64_t(0));
+        H(x, 0) = hpx::make_ready_future(boost::int64_t(0));
     }
 
     ///////////////////////////////////////////////////////////////////////////
@@ -160,10 +163,11 @@ alignment smith_waterman(std::string const& a, std::string const& b)
     {
         for (boost::uint32_t j = 1; j < k; ++j)
         {
-            H(i, j) = hpx::async(&calc_cell, i, j, a[i-1], b[j-1]
-                               , H(i, j-1)   // left dependency
-                               , H(i-1, j-1) // diagonal dependency
-                               , H(i-1, j)); // top dependency
+            typedef hpxla::local_matrix_view<hpx::shared_future<boost::int64_t> >::value_type mtx_type;
+            H(i, j) = hpx::async(calc_cell, i, j, a[i-1], b[j-1]
+                               , boost::reference_wrapper<mtx_type>(H(i, j-1))   // left dependency
+                               , boost::reference_wrapper<mtx_type>(H(i-1, j-1)) // dgnl dependency 
+                               , boost::reference_wrapper<mtx_type>(H(i-1, j))); // top dependency
         } 
     }  
 
