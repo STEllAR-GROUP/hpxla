@@ -8,7 +8,10 @@
 #if !defined(HPXLA_D771701C_D339_4D01_B1BE_7F941F53D83D)
 #define HPXLA_D771701C_D339_4D01_B1BE_7F941F53D83D
 
-#include <cblas.h>
+extern "C"
+{
+    #include <cblas.h>
+}
 
 namespace hpxla { namespace blas
 {

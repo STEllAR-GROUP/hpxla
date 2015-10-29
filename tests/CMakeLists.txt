@@ -13,12 +13,10 @@ set(non_hpx_tests
    )
 
 foreach(test ${non_hpx_tests})
+
   add_hpx_executable(${test}_test SOURCES ${test}.cpp
-                     DEPENDENCIES ${BLAS_LIBRARY} NOLIBS) 
-
-  set_target_properties(${test}_test_exe PROPERTIES
-                        COMPILE_FLAGS -DHPXLA_NO_LIBHPX)
-
+    DEPENDENCIES ${CBLAS_LIBRARIES})
+  
   # Add a custom target for this example.
   add_hpx_pseudo_target(tests.${test})
 

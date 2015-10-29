@@ -12,7 +12,10 @@
 
 #include <complex>
 
-#include <cblas.h>
+extern "C" 
+{
+    #include <cblas.h>
+}
 
 namespace hpxla { namespace blas
 {

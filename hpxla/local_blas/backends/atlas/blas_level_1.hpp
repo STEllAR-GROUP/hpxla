@@ -14,7 +14,10 @@
 
 #include <complex>
 
-#include <cblas.h>
+extern "C"
+{
+    #include <cblas.h>
+}
 
 // TODO: std::vector overloads.
 
