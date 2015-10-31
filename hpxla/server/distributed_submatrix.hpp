@@ -12,7 +12,6 @@
 
 #include <hpx/hpx_fwd.hpp>
 #include <hpx/include/components.hpp>
-#include <hpx/util/function.hpp>
 
 #include <boost/serialization/complex.hpp>
 
