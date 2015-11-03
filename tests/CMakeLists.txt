@@ -15,7 +15,7 @@ set(non_hpx_tests
 foreach(test ${non_hpx_tests})
 
   add_hpx_executable(${test}_test SOURCES ${test}.cpp
-    DEPENDENCIES ${CBLAS_LIBRARIES})
+    DEPENDENCIES ${BLAS_LIBRARIES})
   
   # Add a custom target for this example.
   add_hpx_pseudo_target(tests.${test})

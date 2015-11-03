@@ -29,10 +29,17 @@ link_directories(${HPX_LIBRARY_DIR})
 
 message(STATUS "Found HPX: ${HPX_PREFIX}")
 
+message(STATUS "Checking for CBLAS or BLAS...")
 find_package(CBLAS)
-link_directories(${CBLAS_LIBRARIES})
-
-message(STATUS "Found BLAS: ${BLAS_LIBRARIES}")
+if(CBLAS_FOUND)
+    message(STATUS "Found CBLAS: ${CBLAS_LIBRARIES}")
+    link_directories(${CBLAS_LIBRARIES})
+    set(BLAS_LIBRARIES ${CBLAS_LIBRARIES})
+else()    
+    find_package(BLAS REQUIRED)
+    message(STATUS "Found BLAS: ${BLAS_LIBRARIES}")
+    link_directories(${BLAS_LIBRARIES})
+endif()
 
 ################################################################################
 add_hpx_pseudo_target(tests)
