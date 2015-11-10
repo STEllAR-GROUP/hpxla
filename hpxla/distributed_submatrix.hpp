@@ -24,10 +24,10 @@ struct distributed_submatrix
     >
 {
     typedef hpx::components::client_base<
-        distributed_submatrix, stubs::distributed_submatrix<T, Policy>
+        distributed_submatrix<T, Policy>, stubs::distributed_submatrix<T, Policy>
     > base_type;
 
-    typedef stubs::distributed_submatrix<T, Policy> server_type;
+    typedef stubs::distributed_submatrix<T, Policy> stubs_type;
 
     typedef typename stubs_type::local_matrix_type local_matrix_type;
 
@@ -47,9 +47,9 @@ struct distributed_submatrix
     typedef typename stubs_type::allocation_policy_type allocation_policy_type;
 
     distributed_submatrix(
-        hpx::naming::id_type const& gid
+        hpx::future<hpx::naming::id_type> && gid
         )
-      : base_type(gid)
+      : base_type(std::move(gid))
     {}
 
     ///////////////////////////////////////////////////////////////////////////
@@ -62,9 +62,9 @@ struct distributed_submatrix
       , matrix_offsets offsets = matrix_offsets(0, 0)
         )
     {
-        BOOST_ASSERT(this->gid_);
+        BOOST_ASSERT(this->get_id());
         this->base_type::initialize_non_blocking
-            (this->gid_, rows, cols, init, offsets);
+            (this->get_id(), rows, cols, init, offsets);
     }
 
     void initialize_sync(
@@ -74,8 +74,8 @@ struct distributed_submatrix
       , matrix_offsets offsets = matrix_offsets(0, 0)
         )
     {
-        BOOST_ASSERT(this->gid_);
-        this->base_type::initialize_sync(this->gid_, rows, cols, init, offsets);
+        BOOST_ASSERT(this->get_id());
+        this->base_type::initialize_sync(this->get_id(), rows, cols, init, offsets);
     }
 
     hpx::lcos::future<void> initialize_async(
@@ -85,9 +85,9 @@ struct distributed_submatrix
       , matrix_offsets offsets = matrix_offsets(0, 0)
         )
     {
-        BOOST_ASSERT(this->gid_);
+        BOOST_ASSERT(this->get_id());
         return this->base_type::initialize_async
-            (this->gid_, rows, cols, init, offsets);
+            (this->get_id(), rows, cols, init, offsets);
     }
 
     ///////////////////////////////////////////////////////////////////////////
@@ -98,8 +98,8 @@ struct distributed_submatrix
       , matrix_offsets offsets = matrix_offsets(0, 0) 
         )
     {
-        BOOST_ASSERT(this->gid_);
-        this->base_type::initialize_non_blocking(this->gid_, m, offsets);
+        BOOST_ASSERT(this->get_id());
+        this->base_type::initialize_non_blocking(this->get_id(), m, offsets);
     }
 
     void initialize_non_blocking(
@@ -107,9 +107,9 @@ struct distributed_submatrix
       , matrix_offsets offsets = matrix_offsets(0, 0) 
         )
     {
-        BOOST_ASSERT(this->gid_);
+        BOOST_ASSERT(this->get_id());
         this->base_type::initialize_non_blocking
-            (this->gid_, boost::move(m), offsets);
+            (this->get_id(), boost::move(m), offsets);
     }
 
     void initialize_sync(
@@ -117,8 +117,8 @@ struct distributed_submatrix
       , matrix_offsets offsets = matrix_offsets(0, 0) 
         )
     {
-        BOOST_ASSERT(this->gid_);
-        this->base_type::initialize_sync(this->gid_, m, offsets);
+        BOOST_ASSERT(this->get_id());
+        this->base_type::initialize_sync(this->get_id(), m, offsets);
     }
 
     void initialize_sync(
@@ -126,9 +126,9 @@ struct distributed_submatrix
       , matrix_offsets offsets = matrix_offsets(0, 0) 
         )
     {
-        BOOST_ASSERT(this->gid_);
+        BOOST_ASSERT(this->get_id());
         // REVIEW: Do I need to use boost::move here?
-        this->base_type::initialize_sync(this->gid_, boost::move(m), offsets);
+        this->base_type::initialize_sync(this->get_id(), boost::move(m), offsets);
     }
 
     hpx::lcos::future<void> initialize_async(
@@ -136,8 +136,8 @@ struct distributed_submatrix
       , matrix_offsets offsets = matrix_offsets(0, 0) 
         )
     {
-        BOOST_ASSERT(this->gid_);
-        return this->base_type::initialize_async(this->gid_, m, offsets);
+        BOOST_ASSERT(this->get_id());
+        return this->base_type::initialize_async(this->get_id(), m, offsets);
     }
 
     hpx::lcos::future<void> initialize_async(
@@ -145,10 +145,10 @@ struct distributed_submatrix
       , matrix_offsets offsets = matrix_offsets(0, 0) 
         )
     {
-        BOOST_ASSERT(this->gid_);
+        BOOST_ASSERT(this->get_id());
         // REVIEW: Do I need to use boost::move here?
         return this->base_type::initialize_async
-            (this->gid_, boost::move(m), offsets);
+            (this->get_id(), boost::move(m), offsets);
     }
 
     ///////////////////////////////////////////////////////////////////////////
@@ -159,8 +159,8 @@ struct distributed_submatrix
       , size_type cols
         )
     {
-        BOOST_ASSERT(this->gid_);
-        return this->base_type::lookup_sync(this->gid_, rows, cols);
+        BOOST_ASSERT(this->get_id());
+        return this->base_type::lookup_sync(this->get_id(), rows, cols);
     }
 
     hpx::lcos::future<value_type> lookup_async(
@@ -168,12 +168,14 @@ struct distributed_submatrix
       , size_type cols
         )
     {
-        BOOST_ASSERT(this->gid_);
-        return this->base_type::lookup_async(this->gid_, rows, cols);
+        BOOST_ASSERT(this->get_id());
+        return this->base_type::lookup_async(this->get_id(), rows, cols);
     }
 };
 
 }
+
+#include <hpxla/policies.hpp>
 
 #endif // HPXLA_58D663CD_0FE1_4B72_8CE6_903A71926A8C
 

@@ -42,6 +42,9 @@ else()
 endif()
 
 ################################################################################
+add_subdirectory(src)
+
+################################################################################
 add_hpx_pseudo_target(tests)
 add_subdirectory(tests)
 
@@ -49,6 +52,4 @@ add_subdirectory(tests)
 add_hpx_pseudo_target(applications)
 add_subdirectory(applications)
 
-################################################################################
-add_subdirectory(src)
 

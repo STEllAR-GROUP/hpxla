@@ -12,11 +12,12 @@ set(non_hpx_tests
     local_blas_level_3
    )
 
+
 foreach(test ${non_hpx_tests})
 
   add_hpx_executable(${test}_test SOURCES ${test}.cpp
     DEPENDENCIES ${BLAS_LIBRARIES})
-  
+
   # Add a custom target for this example.
   add_hpx_pseudo_target(tests.${test})
 
@@ -27,3 +28,5 @@ foreach(test ${non_hpx_tests})
   add_hpx_pseudo_dependencies(tests.${test} ${test}_test_exe)
 endforeach()
 
+add_hpx_pseudo_target(tests.component)
+add_subdirectory(component)
