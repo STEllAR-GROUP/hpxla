@@ -4,11 +4,13 @@
 //  file LICENSE_1_0.txt or copy at http://www.boost.org/LICENSE_1_0.txt)
 
 #include <hpx/hpx_init.hpp>
+#include <hpx/include/async.hpp>
 #include <hpx/util/high_resolution_timer.hpp>
 
 #include <hpxla/local_matrix.hpp>
 
 #include <boost/format.hpp>
+#include <boost/ref.hpp>
 #include <boost/spirit/include/qi.hpp>
 #include <boost/atomic.hpp>
 #include <boost/random/mersenne_twister.hpp>
@@ -114,7 +116,7 @@ boost::int64_t calc_cell(
 
 void calc_block(
     hpxla::local_matrix_view<boost::int64_t>& H 
-  , hpxla::local_matrix_view<hpx::future<void> >& C // Control matrix.
+  , hpxla::local_matrix_view<hpx::shared_future<void> >& C // Control matrix.
   , coords start   // The start of our cell block. 
   , coords end     // The end of our cell block.
   , coords control // Our location in the control matrix.
@@ -195,14 +197,14 @@ alignment smith_waterman(
 
     // Control matrix, for synchronizing the blocked, parallel operations.
     boost::uint32_t g = (grain_size % a.size()) + 1;
-    hpxla::local_matrix<hpx::future<void> > control_matrix(g, g); 
+    hpxla::local_matrix<hpx::shared_future<void> > control_matrix(g, g); 
 
-    hpxla::local_matrix_view<hpx::future<void> > C = control_matrix.view();
+    hpxla::local_matrix_view<hpx::shared_future<void> > C = control_matrix.view();
 
     for (boost::uint32_t x = 0; x < g; ++x)
     {
-        C(0, x) = hpx::lcos::create_void();
-        C(x, 0) = hpx::lcos::create_void();
+        C(0, x) = hpx::lcos::make_ready_future();
+        C(x, 0) = hpx::lcos::make_ready_future();
     }
 
     ///////////////////////////////////////////////////////////////////////////
@@ -219,7 +221,11 @@ alignment smith_waterman(
 
             coords const control(i, j);
 
-            C(i, j) = hpx::async(&calc_block, H, C, start, end, control, a, b);
+            //calc_block(H, C, start, end, control, a, b);
+            C(i, j) = hpx::async(calc_block, 
+                    boost::reference_wrapper<hpxla::local_matrix_view<boost::int64_t> >(H), 
+                    boost::reference_wrapper<hpxla::local_matrix_view<hpx::shared_future<void> > >(C), 
+                    start, end, control, a, b);
         } 
     }  
 

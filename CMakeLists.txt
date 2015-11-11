@@ -8,67 +8,41 @@
 # TODO: ATLAS/MKL/GSL selection.
 
 cmake_minimum_required(VERSION 2.8.4 FATAL_ERROR)
+set(CMAKE_MODULE_PATH ${CMAKE_MODULE_PATH} "${CMAKE_SOURCE_DIR}/cmake/Modules/")
 
 project(hpxla CXX)
 
 ################################################################################
 include_directories(${hpxla_SOURCE_DIR})
 
-# TODO: Move this into a CMake macro.
-if(MSVC)
-  set(CMAKE_RUNTIME_OUTPUT_DIRECTORY_RELEASE ${CMAKE_BINARY_DIR}/Release/bin)
-  set(CMAKE_LIBRARY_OUTPUT_DIRECTORY_RELEASE ${CMAKE_BINARY_DIR}/Release/lib/hpx)
-  set(CMAKE_ARCHIVE_OUTPUT_DIRECTORY_RELEASE ${CMAKE_BINARY_DIR}/Release/lib/hpx)
-  set(CMAKE_RUNTIME_OUTPUT_DIRECTORY_DEBUG ${CMAKE_BINARY_DIR}/Debug/bin)
-  set(CMAKE_LIBRARY_OUTPUT_DIRECTORY_DEBUG ${CMAKE_BINARY_DIR}/Debug/lib/hpx)
-  set(CMAKE_ARCHIVE_OUTPUT_DIRECTORY_DEBUG ${CMAKE_BINARY_DIR}/Debug/lib/hpx)
-  set(CMAKE_RUNTIME_OUTPUT_DIRECTORY_MINSIZEREL ${CMAKE_BINARY_DIR}/MinSizeRel/bin)
-  set(CMAKE_LIBRARY_OUTPUT_DIRECTORY_MINSIZEREL ${CMAKE_BINARY_DIR}/MinSizeRel/lib/hpx)
-  set(CMAKE_ARCHIVE_OUTPUT_DIRECTORY_MINSIZEREL ${CMAKE_BINARY_DIR}/MinSizeRel/lib/hpx)
-  set(CMAKE_RUNTIME_OUTPUT_DIRECTORY_RELWITHDEBINFO ${CMAKE_BINARY_DIR}/RelWithDebInfo/bin)
-  set(CMAKE_LIBRARY_OUTPUT_DIRECTORY_RELWITHDEBINFO ${CMAKE_BINARY_DIR}/RelWithDebInfo/lib/hpx)
-  set(CMAKE_ARCHIVE_OUTPUT_DIRECTORY_RELWITHDEBINFO ${CMAKE_BINARY_DIR}/RelWithDebInfo/lib/hpx)
-else()
-  set(CMAKE_RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/bin)
-  set(CMAKE_LIBRARY_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/lib/hpx)
-  set(CMAKE_ARCHIVE_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/lib/hpx)
+if(HPX_ROOT)
+    set(HPX_DIR "${HPX_ROOT}/lib/cmake/HPX")
+endif()
+
+if(HPX_DIR)
+    message(STATUS "Searching for HPX in \"${HPX_ROOT}\" ...")
+endif()
+
+find_package(HPX REQUIRED)
+include_directories(${HPX_INCLUDE_DIR})
+link_directories(${HPX_LIBRARY_DIR})
+
+message(STATUS "Found HPX: ${HPX_PREFIX}")
+
+message(STATUS "Checking for CBLAS or BLAS...")
+find_package(CBLAS)
+if(CBLAS_FOUND)
+    message(STATUS "Found CBLAS: ${CBLAS_LIBRARIES}")
+    link_directories(${CBLAS_LIBRARIES})
+    set(BLAS_LIBRARIES ${CBLAS_LIBRARIES})
+else()    
+    find_package(BLAS REQUIRED)
+    message(STATUS "Found BLAS: ${BLAS_LIBRARIES}")
+    link_directories(${BLAS_LIBRARIES})
 endif()
 
 ################################################################################
-# TODO: Move this into FindHPX.cmake.in.
-if(NOT HPX_ROOT)
-  if(NOT $ENV{HPX_LOCATION} STREQUAL "")
-    set(HPX_ROOT $ENV{HPX_LOCATION})
-  elseif(NOT $ENV{HPX_ROOT} STREQUAL "")
-    set(HPX_ROOT $ENV{HPX_ROOT})
-  endif()
-endif()
-
-set(HPX_ROOT "${HPX_ROOT}" CACHE PATH "The HPX installation to use." FORCE)
-
-set(CMAKE_MODULE_PATH ${HPX_ROOT}/share/cmake-2.8/Modules)
-
-find_package(HPX)
-
-foreach(dir ${HPX_INCLUDE_DIR})
-  include_directories(${dir})
-endforeach()
-
-foreach(dir ${HPX_LIBRARY_DIR})
-  link_directories(${dir})
-endforeach()
-
-set(CMAKE_BUILD_TYPE ${HPX_BUILD_TYPE} CACHE STRING "Build type." FORCE)
-
-################################################################################
-find_package(HPX_BLAS)
-include_directories(${BLAS_INCLUDE_DIR})
-link_directories(${BLAS_LIBRARY_DIR})
-
-################################################################################
-hpx_check_for_cxx11_std_initializer_list(HPX_CXX11_STD_INITIALIZER_LIST
-  DEFINITIONS HPX_HAVE_CXX11_STD_INITIALIZER_LIST
-  ROOT        ${HPX_ROOT})
+add_subdirectory(src)
 
 ################################################################################
 add_hpx_pseudo_target(tests)
@@ -78,6 +52,4 @@ add_subdirectory(tests)
 add_hpx_pseudo_target(applications)
 add_subdirectory(applications)
 
-################################################################################
-add_subdirectory(src)
 

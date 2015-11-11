@@ -14,7 +14,10 @@
 
 #include <complex>
 
-#include <cblas.h>
+extern "C"
+{
+    #include <cblas.h>
+}
 
 // NOTE: ATM, only implemented for general matrices.
 // TODO: std::vector overloads.

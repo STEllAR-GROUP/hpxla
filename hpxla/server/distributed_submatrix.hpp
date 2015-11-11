@@ -12,8 +12,6 @@
 
 #include <hpx/hpx_fwd.hpp>
 #include <hpx/include/components.hpp>
-#include <hpx/include/actions.hpp>
-#include <hpx/util/function.hpp>
 
 #include <boost/serialization/complex.hpp>
 
@@ -96,58 +94,10 @@ struct HPX_COMPONENT_EXPORT distributed_submatrix
       , action_apply
     };
 
-    typedef hpx::actions::action4<
-        // Component server type.
-        distributed_submatrix
-        // Action code.
-      , action_lookup
-        // Arguments.
-      , size_type
-      , size_type
-      , const_reference
-      , matrix_offsets
-        // Method bound to this action.
-      , &distributed_submatrix<T, Policy>::initialize_from_dimensions
-    > initialize_from_dimensions_action;
-
-    typedef hpx::actions::action2<
-        // Component server type.
-        distributed_submatrix
-        // Action code.
-      , action_lookup
-        // Arguments.
-      , local_matrix_type const&
-      , matrix_offsets
-        // Method bound to this action.
-      , &distributed_submatrix<T, Policy>::initialize_from_matrix
-    > initialize_from_matrix_action;
-
-    typedef hpx::actions::result_action2<
-        // Component server type.
-        distributed_submatrix
-        // Return type.
-      , value_type
-        // Action code.
-      , action_lookup
-        // Arguments.
-      , size_type
-      , size_type
-        // Method bound to this action.
-      , &distributed_submatrix<T, Policy>::lookup
-    > lookup_action;
-
-    typedef hpx::actions::action3<
-        // Component server type.
-        distributed_submatrix
-        // Action code.
-      , action_apply
-        // Arguments.
-      , apply_function_type const&
-      , matrix_bounds
-      , matrix_bounds
-        // Method bound to this action.
-      , &distributed_submatrix<T, Policy>::apply
-    > apply_action;
+    HPX_DEFINE_COMPONENT_ACTION(distributed_submatrix, initialize_from_dimensions);
+    HPX_DEFINE_COMPONENT_ACTION(distributed_submatrix, initialize_from_matrix);
+    HPX_DEFINE_COMPONENT_ACTION(distributed_submatrix, lookup);
+    HPX_DEFINE_COMPONENT_ACTION(distributed_submatrix, apply);
 };
 
 typedef distributed_submatrix<
@@ -208,107 +158,107 @@ typedef distributed_submatrix<
 
 }}
 
-HPX_REGISTER_ACTION_DECLARATION_EX(
+HPX_REGISTER_ACTION_DECLARATION(
     hpxla::server::rfc_distributed_submatrix::initialize_from_dimensions_action
   , rfc_distributed_submatrix_initialize_from_dimensions_action);
-HPX_REGISTER_ACTION_DECLARATION_EX(
+HPX_REGISTER_ACTION_DECLARATION(
     hpxla::server::rfc_distributed_submatrix::initialize_from_matrix_action
   , rfc_distributed_submatrix_initialize_from_matrix_action);
-HPX_REGISTER_ACTION_DECLARATION_EX(
+HPX_REGISTER_ACTION_DECLARATION(
     hpxla::server::rfc_distributed_submatrix::lookup_action
   , rfc_distributed_submatrix_lookup_action);
-HPX_REGISTER_ACTION_DECLARATION_EX(
+HPX_REGISTER_ACTION_DECLARATION(
     hpxla::server::rfc_distributed_submatrix::apply_action
   , rfc_distributed_submatrix_apply_action);
 
-HPX_REGISTER_ACTION_DECLARATION_EX(
+HPX_REGISTER_ACTION_DECLARATION(
     hpxla::server::rfr_distributed_submatrix::initialize_from_dimensions_action
   , rfr_distributed_submatrix_initialize_from_dimensions_action);
-HPX_REGISTER_ACTION_DECLARATION_EX(
+HPX_REGISTER_ACTION_DECLARATION(
     hpxla::server::rfr_distributed_submatrix::initialize_from_matrix_action
   , rfr_distributed_submatrix_initialize_from_matrix_action);
-HPX_REGISTER_ACTION_DECLARATION_EX(
+HPX_REGISTER_ACTION_DECLARATION(
     hpxla::server::rfr_distributed_submatrix::lookup_action
   , rfr_distributed_submatrix_lookup_action);
-HPX_REGISTER_ACTION_DECLARATION_EX(
+HPX_REGISTER_ACTION_DECLARATION(
     hpxla::server::rfr_distributed_submatrix::apply_action
   , rfr_distributed_submatrix_apply_action);
 
-HPX_REGISTER_ACTION_DECLARATION_EX(
+HPX_REGISTER_ACTION_DECLARATION(
     hpxla::server::rdc_distributed_submatrix::initialize_from_dimensions_action
   , rdc_distributed_submatrix_initialize_from_dimensions_action);
-HPX_REGISTER_ACTION_DECLARATION_EX(
+HPX_REGISTER_ACTION_DECLARATION(
     hpxla::server::rdc_distributed_submatrix::initialize_from_matrix_action
   , rdc_distributed_submatrix_initialize_from_matrix_action);
-HPX_REGISTER_ACTION_DECLARATION_EX(
+HPX_REGISTER_ACTION_DECLARATION(
     hpxla::server::rdc_distributed_submatrix::lookup_action
   , rdc_distributed_submatrix_lookup_action);
-HPX_REGISTER_ACTION_DECLARATION_EX(
+HPX_REGISTER_ACTION_DECLARATION(
     hpxla::server::rdc_distributed_submatrix::apply_action
   , rdc_distributed_submatrix_apply_action);
 
-HPX_REGISTER_ACTION_DECLARATION_EX(
+HPX_REGISTER_ACTION_DECLARATION(
     hpxla::server::rdr_distributed_submatrix::initialize_from_dimensions_action
   , rdr_distributed_submatrix_initialize_from_dimensions_action);
-HPX_REGISTER_ACTION_DECLARATION_EX(
+HPX_REGISTER_ACTION_DECLARATION(
     hpxla::server::rdr_distributed_submatrix::initialize_from_matrix_action
   , rdr_distributed_submatrix_initialize_from_matrix_action);
-HPX_REGISTER_ACTION_DECLARATION_EX(
+HPX_REGISTER_ACTION_DECLARATION(
     hpxla::server::rdr_distributed_submatrix::lookup_action
   , rdr_distributed_submatrix_lookup_action);
-HPX_REGISTER_ACTION_DECLARATION_EX(
+HPX_REGISTER_ACTION_DECLARATION(
     hpxla::server::rdr_distributed_submatrix::apply_action
   , rdr_distributed_submatrix_apply_action);
 
-HPX_REGISTER_ACTION_DECLARATION_EX(
+HPX_REGISTER_ACTION_DECLARATION(
     hpxla::server::cfc_distributed_submatrix::initialize_from_dimensions_action
   , cfc_distributed_submatrix_initialize_from_dimensions_action);
-HPX_REGISTER_ACTION_DECLARATION_EX(
+HPX_REGISTER_ACTION_DECLARATION(
     hpxla::server::cfc_distributed_submatrix::initialize_from_matrix_action
   , cfc_distributed_submatrix_initialize_from_matrix_action);
-HPX_REGISTER_ACTION_DECLARATION_EX(
+HPX_REGISTER_ACTION_DECLARATION(
     hpxla::server::cfc_distributed_submatrix::lookup_action
   , cfc_distributed_submatrix_lookup_action);
-HPX_REGISTER_ACTION_DECLARATION_EX(
+HPX_REGISTER_ACTION_DECLARATION(
     hpxla::server::cfc_distributed_submatrix::apply_action
   , cfc_distributed_submatrix_apply_action);
 
-HPX_REGISTER_ACTION_DECLARATION_EX(
+HPX_REGISTER_ACTION_DECLARATION(
     hpxla::server::cfr_distributed_submatrix::initialize_from_dimensions_action
   , cfr_distributed_submatrix_initialize_from_dimensions_action);
-HPX_REGISTER_ACTION_DECLARATION_EX(
+HPX_REGISTER_ACTION_DECLARATION(
     hpxla::server::cfr_distributed_submatrix::initialize_from_matrix_action
   , cfr_distributed_submatrix_initialize_from_matrix_action);
-HPX_REGISTER_ACTION_DECLARATION_EX(
+HPX_REGISTER_ACTION_DECLARATION(
     hpxla::server::cfr_distributed_submatrix::lookup_action
   , cfr_distributed_submatrix_lookup_action);
-HPX_REGISTER_ACTION_DECLARATION_EX(
+HPX_REGISTER_ACTION_DECLARATION(
     hpxla::server::cfr_distributed_submatrix::apply_action
   , cfr_distributed_submatrix_apply_action);
 
-HPX_REGISTER_ACTION_DECLARATION_EX(
+HPX_REGISTER_ACTION_DECLARATION(
     hpxla::server::cdc_distributed_submatrix::initialize_from_dimensions_action
   , cdc_distributed_submatrix_initialize_from_dimensions_action);
-HPX_REGISTER_ACTION_DECLARATION_EX(
+HPX_REGISTER_ACTION_DECLARATION(
     hpxla::server::cdc_distributed_submatrix::initialize_from_matrix_action
   , cdc_distributed_submatrix_initialize_from_matrix_action);
-HPX_REGISTER_ACTION_DECLARATION_EX(
+HPX_REGISTER_ACTION_DECLARATION(
     hpxla::server::cdc_distributed_submatrix::lookup_action
   , cdc_distributed_submatrix_lookup_action);
-HPX_REGISTER_ACTION_DECLARATION_EX(
+HPX_REGISTER_ACTION_DECLARATION(
     hpxla::server::cdc_distributed_submatrix::apply_action
   , cdc_distributed_submatrix_apply_action);
 
-HPX_REGISTER_ACTION_DECLARATION_EX(
+HPX_REGISTER_ACTION_DECLARATION(
     hpxla::server::cdr_distributed_submatrix::initialize_from_dimensions_action
   , cdr_distributed_submatrix_initialize_from_dimensions_action);
-HPX_REGISTER_ACTION_DECLARATION_EX(
+HPX_REGISTER_ACTION_DECLARATION(
     hpxla::server::cdr_distributed_submatrix::initialize_from_matrix_action
   , cdr_distributed_submatrix_initialize_from_matrix_action);
-HPX_REGISTER_ACTION_DECLARATION_EX(
+HPX_REGISTER_ACTION_DECLARATION(
     hpxla::server::cdr_distributed_submatrix::lookup_action
   , cdr_distributed_submatrix_lookup_action);
-HPX_REGISTER_ACTION_DECLARATION_EX(
+HPX_REGISTER_ACTION_DECLARATION(
     hpxla::server::cdr_distributed_submatrix::apply_action
   , cdr_distributed_submatrix_apply_action);
 
