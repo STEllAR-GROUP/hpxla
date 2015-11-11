@@ -8,7 +8,8 @@
 #if !defined(HPXLA_58D663CD_0FE1_4B72_8CE6_903A71926A8C)
 #define HPXLA_58D663CD_0FE1_4B72_8CE6_903A71926A8C
 
-#include <hpxla/stubs/distributed_submatrix.hpp>
+//include <hpxla/stubs/distributed_submatrix.hpp>
+#include <hpxla/server/distributed_submatrix.hpp>
 
 namespace hpxla
 {
@@ -20,32 +21,31 @@ template <
 struct distributed_submatrix 
   : hpx::components::client_base<
         distributed_submatrix<T, Policy>
-      , stubs::distributed_submatrix<T, Policy>
+      , server::distributed_submatrix<T, Policy>
     >
 {
     typedef hpx::components::client_base<
-        distributed_submatrix<T, Policy>, stubs::distributed_submatrix<T, Policy>
+        distributed_submatrix<T, Policy>, server::distributed_submatrix<T, Policy>
     > base_type;
+    
+    typedef server::distributed_submatrix<T, Policy> server_type;
 
-    typedef stubs::distributed_submatrix<T, Policy> stubs_type;
+    typedef typename server_type::local_matrix_type local_matrix_type;
 
-    typedef typename stubs_type::local_matrix_type local_matrix_type;
+    typedef typename server_type::value_type value_type;
+    typedef typename server_type::reference reference;
+    typedef typename server_type::const_reference const_reference;
+    typedef typename server_type::pointer pointer;
+    typedef typename server_type::const_pointer const_pointer;
+    typedef typename server_type::size_type size_type;
 
-    typedef typename stubs_type::value_type value_type;
-    typedef typename stubs_type::reference reference;
-    typedef typename stubs_type::const_reference const_reference;
-    typedef typename stubs_type::pointer pointer;
-    typedef typename stubs_type::const_pointer const_pointer;
-    typedef typename stubs_type::size_type size_type;
-
-    typedef typename stubs_type::policy_type policy_type;
-    typedef typename stubs_type::indexing_policy_type indexing_policy_type;
-    typedef typename stubs_type::partitioning_policy_type
+    typedef typename server_type::policy_type policy_type;
+    typedef typename server_type::indexing_policy_type indexing_policy_type;
+    typedef typename server_type::partitioning_policy_type
         partitioning_policy_type;
-    typedef typename stubs_type::distribution_policy_type
+    typedef typename server_type::distribution_policy_type
         distribution_policy_type;
-    typedef typename stubs_type::allocation_policy_type allocation_policy_type;
-
+    typedef typename server_type::allocation_policy_type allocation_policy_type;
     distributed_submatrix(
         hpx::future<hpx::naming::id_type> && gid
         )
@@ -62,9 +62,10 @@ struct distributed_submatrix
       , matrix_offsets offsets = matrix_offsets(0, 0)
         )
     {
+        typedef typename server_type::initialize_from_dimensions_action
+            action_type;
         BOOST_ASSERT(this->get_id());
-        this->base_type::initialize_non_blocking
-            (this->get_id(), rows, cols, init, offsets);
+        hpx::apply<action_type>(this->get_id(), rows, cols, init, offsets);
     }
 
     void initialize_sync(
@@ -74,8 +75,10 @@ struct distributed_submatrix
       , matrix_offsets offsets = matrix_offsets(0, 0)
         )
     {
+        typedef typename server_type::initialize_from_dimensions_action
+            action_type;
         BOOST_ASSERT(this->get_id());
-        this->base_type::initialize_sync(this->get_id(), rows, cols, init, offsets);
+        hpx::async<action_type>(this->get_id(), rows, cols, init, offsets).get();
     }
 
     hpx::lcos::future<void> initialize_async(
@@ -85,9 +88,10 @@ struct distributed_submatrix
       , matrix_offsets offsets = matrix_offsets(0, 0)
         )
     {
+        typedef typename server_type::initialize_from_dimensions_action
+            action_type;
         BOOST_ASSERT(this->get_id());
-        return this->base_type::initialize_async
-            (this->get_id(), rows, cols, init, offsets);
+        return hpx::async<action_type>(this->get_id(), rows, cols, init, offsets);
     }
 
     ///////////////////////////////////////////////////////////////////////////
@@ -98,8 +102,10 @@ struct distributed_submatrix
       , matrix_offsets offsets = matrix_offsets(0, 0) 
         )
     {
+        typedef typename server_type::initialize_from_matrix_action
+            action_type;
         BOOST_ASSERT(this->get_id());
-        this->base_type::initialize_non_blocking(this->get_id(), m, offsets);
+        hpx::apply<action_type>(this->get_id(), m, offsets);
     }
 
     void initialize_non_blocking(
@@ -107,9 +113,11 @@ struct distributed_submatrix
       , matrix_offsets offsets = matrix_offsets(0, 0) 
         )
     {
+        typedef typename server_type::initialize_from_matrix_action
+            action_type;
         BOOST_ASSERT(this->get_id());
-        this->base_type::initialize_non_blocking
-            (this->get_id(), boost::move(m), offsets);
+        // Note, boost::move needed here or no?
+        hpx::apply<action_type>(this->get_id(), boost::move(m), offsets);
     }
 
     void initialize_sync(
@@ -117,8 +125,10 @@ struct distributed_submatrix
       , matrix_offsets offsets = matrix_offsets(0, 0) 
         )
     {
+        typedef typename server_type::initialize_from_matrix_action
+            action_type;
         BOOST_ASSERT(this->get_id());
-        this->base_type::initialize_sync(this->get_id(), m, offsets);
+        hpx::async<action_type>(this->get_id(), boost::move(m), offsets).get();
     }
 
     void initialize_sync(
@@ -126,9 +136,11 @@ struct distributed_submatrix
       , matrix_offsets offsets = matrix_offsets(0, 0) 
         )
     {
+        typedef typename server_type::initialize_from_matrix_action
+            action_type;
         BOOST_ASSERT(this->get_id());
-        // REVIEW: Do I need to use boost::move here?
-        this->base_type::initialize_sync(this->get_id(), boost::move(m), offsets);
+        // Note, boost::move needed here or no?
+        hpx::async<action_type>(this->get_id(), boost::move(m), offsets).get();
     }
 
     hpx::lcos::future<void> initialize_async(
@@ -136,8 +148,10 @@ struct distributed_submatrix
       , matrix_offsets offsets = matrix_offsets(0, 0) 
         )
     {
+        typedef typename server_type::initialize_from_matrix_action
+            action_type;
         BOOST_ASSERT(this->get_id());
-        return this->base_type::initialize_async(this->get_id(), m, offsets);
+        return hpx::async<action_type>(this->get_id(), m, offsets);
     }
 
     hpx::lcos::future<void> initialize_async(
@@ -145,10 +159,11 @@ struct distributed_submatrix
       , matrix_offsets offsets = matrix_offsets(0, 0) 
         )
     {
+        typedef typename server_type::initialize_from_matrix_action
+            action_type;
         BOOST_ASSERT(this->get_id());
         // REVIEW: Do I need to use boost::move here?
-        return this->base_type::initialize_async
-            (this->get_id(), boost::move(m), offsets);
+        return hpx::async<action_type>(this->get_id(), boost::move(m), offsets);
     }
 
     ///////////////////////////////////////////////////////////////////////////
@@ -159,8 +174,9 @@ struct distributed_submatrix
       , size_type cols
         )
     {
+        typedef typename server_type::lookup_action action_type;
         BOOST_ASSERT(this->get_id());
-        return this->base_type::lookup_sync(this->get_id(), rows, cols);
+        hpx::async<action_type>(this->get_id(), rows, cols).get();
     }
 
     hpx::lcos::future<value_type> lookup_async(
@@ -168,8 +184,9 @@ struct distributed_submatrix
       , size_type cols
         )
     {
+        typedef typename server_type::lookup_action action_type;
         BOOST_ASSERT(this->get_id());
-        return this->base_type::lookup_async(this->get_id(), rows, cols);
+        return hpx::async<action_type>(this->get_id(), rows, cols);
     }
 };
 
